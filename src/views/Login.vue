@@ -86,7 +86,7 @@ async function handleLogin() {
         username: form.username,
         password: form.password,
       })
-      ElMessage.success('登录成功')
+      ElMessage.success(`欢迎，${userStore.roleLabel}`)
       router.push('/')
     } catch (err) {
       // 错误已由响应拦截器统一处理
