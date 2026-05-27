@@ -19,6 +19,27 @@ const routes = [
     component: () => import('@/views/About.vue'),
     meta: { title: '关于' },
   },
+  // 管理后台路由（仅管理员可访问）
+  {
+    path: '/admin',
+    name: 'Admin',
+    redirect: '/admin/users',
+    meta: { title: '管理后台', roles: [3] },
+    children: [
+      {
+        path: 'users',
+        name: 'UserManage',
+        component: () => import('@/views/admin/UserManage.vue'),
+        meta: { title: '用户管理（学员管理）', roles: [3] },
+      },
+      {
+        path: 'coaches',
+        name: 'CoachManage',
+        component: () => import('@/views/admin/CoachManage.vue'),
+        meta: { title: '教练管理', roles: [3] },
+      },
+    ],
+  },
 ]
 
 const router = createRouter({

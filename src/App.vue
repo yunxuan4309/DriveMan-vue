@@ -10,6 +10,11 @@
         class="nav-menu"
       >
         <el-menu-item index="/">首页</el-menu-item>
+        <el-sub-menu index="/admin" v-if="userStore.role === 3">
+          <template #title>管理后台</template>
+          <el-menu-item index="/admin/users">用户管理（学员管理）</el-menu-item>
+          <el-menu-item index="/admin/coaches">教练管理</el-menu-item>
+        </el-sub-menu>
         <el-menu-item index="/about">关于</el-menu-item>
       </el-menu>
 
