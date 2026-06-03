@@ -19,24 +19,132 @@ const routes = [
     component: () => import('@/views/About.vue'),
     meta: { title: '关于' },
   },
-  // 管理后台路由（仅管理员可访问）
+  // ── 学员功能路由 ─────────────────────────────────────
+  {
+    path: '/student',
+    name: 'Student',
+    redirect: '/student/appointment',
+    meta: { title: '学员功能', roles: [1] },
+    children: [
+      {
+        path: 'appointment',
+        name: 'StudentAppointment',
+        component: () => import('@/views/student/Appointment.vue'),
+        meta: { title: '约课管理', roles: [1] },
+      },
+      {
+        path: 'exam-registration',
+        name: 'StudentExamRegistration',
+        component: () => import('@/views/student/ExamRegistration.vue'),
+        meta: { title: '考试报名', roles: [1] },
+      },
+      {
+        path: 'coach-apply',
+        name: 'StudentCoachApply',
+        component: () => import('@/views/student/CoachApply.vue'),
+        meta: { title: '教练申请', roles: [1] },
+      },
+      {
+        path: 'files',
+        name: 'StudentMyFiles',
+        component: () => import('@/views/student/MyFiles.vue'),
+        meta: { title: '文件管理', roles: [1] },
+      },
+      {
+        path: 'scores',
+        name: 'StudentMyScores',
+        component: () => import('@/views/student/MyScores.vue'),
+        meta: { title: '我的成绩', roles: [1] },
+      },
+    ],
+  },
+  // ── 教练功能路由 ─────────────────────────────────────
+  {
+    path: '/coach',
+    name: 'Coach',
+    redirect: '/coach/courses',
+    meta: { title: '教练功能', roles: [2] },
+    children: [
+      {
+        path: 'courses',
+        name: 'CoachMyCourses',
+        component: () => import('@/views/coach/MyCourses.vue'),
+        meta: { title: '我的课程', roles: [2] },
+      },
+      {
+        path: 'students',
+        name: 'CoachStudentsManage',
+        component: () => import('@/views/coach/StudentsManage.vue'),
+        meta: { title: '学员管理', roles: [2] },
+      },
+      {
+        path: 'exam',
+        name: 'CoachExamManage',
+        component: () => import('@/views/coach/ExamManage.vue'),
+        meta: { title: '考试管理', roles: [2] },
+      },
+    ],
+  },
+  // ── 管理后台路由（仅管理员可访问）─────────────────────
   {
     path: '/admin',
     name: 'Admin',
-    redirect: '/admin/users',
+    redirect: '/admin/students',
     meta: { title: '管理后台', roles: [3] },
     children: [
       {
-        path: 'users',
-        name: 'UserManage',
-        component: () => import('@/views/admin/UserManage.vue'),
-        meta: { title: '用户管理（学员管理）', roles: [3] },
+        path: 'students',
+        name: 'StudentManage',
+        component: () => import('@/views/admin/StudentManage.vue'),
+        meta: { title: '学员管理', roles: [3] },
       },
       {
         path: 'coaches',
         name: 'CoachManage',
         component: () => import('@/views/admin/CoachManage.vue'),
         meta: { title: '教练管理', roles: [3] },
+      },
+      {
+        path: 'registration-review',
+        name: 'RegistrationReview',
+        component: () => import('@/views/admin/RegistrationReview.vue'),
+        meta: { title: '报名审核', roles: [3] },
+      },
+      {
+        path: 'exam-sessions',
+        name: 'ExamSessions',
+        component: () => import('@/views/admin/ExamSessions.vue'),
+        meta: { title: '考试场次', roles: [3] },
+      },
+      {
+        path: 'exam-review',
+        name: 'ExamReview',
+        component: () => import('@/views/admin/ExamReview.vue'),
+        meta: { title: '考试审核', roles: [3] },
+      },
+      {
+        path: 'coach-application-review',
+        name: 'CoachApplicationReview',
+        component: () => import('@/views/admin/CoachApplicationReview.vue'),
+        meta: { title: '教练申请审核', roles: [3] },
+      },
+      {
+        path: 'coach-assignment',
+        name: 'CoachAssignment',
+        component: () => import('@/views/admin/CoachAssignment.vue'),
+        meta: { title: '教练分配', roles: [3] },
+      },
+      {
+        path: 'files',
+        name: 'FileManage',
+        component: () => import('@/views/admin/FileManage.vue'),
+        meta: { title: '文件管理', roles: [3] },
+      },
+      {
+        path: 'statistics',
+        name: 'Statistics',
+        component: () => import('@/views/admin/Statistics.vue'),
+        meta: { title: '统计报表', roles: [3] },
       },
     ],
   },

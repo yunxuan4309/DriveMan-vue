@@ -12,6 +12,9 @@
 
       <!-- 搜索栏 -->
       <el-form :model="searchForm" inline class="search-form">
+        <el-form-item label="用户名">
+          <el-input v-model="searchForm.username" placeholder="请输入用户名" clearable />
+        </el-form-item>
         <el-form-item label="教练姓名">
           <el-input v-model="searchForm.realName" placeholder="请输入教练姓名" clearable />
         </el-form-item>
@@ -36,8 +39,6 @@
       <!-- 数据表格 -->
       <el-table :data="coachList" v-loading="loading" border stripe>
         <el-table-column type="index" label="序号" width="60" align="center" />
-        <el-table-column prop="coachId" label="教练ID" width="80" />
-        <el-table-column prop="userId" label="用户ID" width="80" />
         <el-table-column prop="realName" label="姓名" width="120" />
         <el-table-column prop="username" label="用户名" width="120" />
         <el-table-column prop="phone" label="手机号" width="140" />
@@ -51,16 +52,11 @@
             {{ row.coachYears }} 年
           </template>
         </el-table-column>
-        <el-table-column prop="vehicleType" label="准驾车型" width="150">
+        <el-table-column prop="vehicleType" label="准驾车型" min-width="150">
           <template #default="{ row }">
             <el-tag v-for="type in row.vehicleType?.split(',')" :key="type" size="small" class="vehicle-tag">
               {{ type }}
             </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" width="160">
-          <template #default="{ row }">
-            {{ formatDateTime(row.createTime) }}
           </template>
         </el-table-column>
         <el-table-column label="操作" width="200" fixed="right">
@@ -173,6 +169,7 @@ import { getUserList } from '@/api/user'
 
 // 搜索表单
 const searchForm = reactive({
+  username: '',
   realName: '',
   vehicleType: '',
 })
@@ -274,6 +271,7 @@ function handleSearch() {
 
 // 重置
 function handleReset() {
+  searchForm.username = ''
   searchForm.realName = ''
   searchForm.vehicleType = ''
   pagination.page = 1
