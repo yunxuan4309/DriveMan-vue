@@ -76,7 +76,9 @@ const menuMap = {
   2: [
     { label: '我的课程', desc: '查看课程安排', icon: Calendar, type: 'primary', route: '/coach/courses' },
     { label: '学员管理', desc: '查看绑定的学员', icon: School, type: 'success', route: '/coach/students' },
-    { label: '考试管理', desc: '管理考试相关', icon: Edit, type: 'warning', route: '/coach/exam' },
+    { label: '学员考试', desc: '查看学员考试状态', icon: Trophy, type: 'warning', route: '/coach/exam' },
+    { label: '考试场次', desc: '查看考试场次信息', icon: Edit, type: 'info', route: '/coach/exam-sessions' },
+    { label: '准教车型申请', desc: '申请增加可教车型', icon: Bicycle, type: '', route: '/coach/vehicle-application' },
   ],
   3: [
     { label: '学员管理', desc: '管理所有学员', icon: Avatar, type: 'primary', route: '/admin/students' },
@@ -93,6 +95,7 @@ const menuMap = {
     { label: '车型配置', desc: '管理车型科目', icon: Bicycle, type: 'success', route: '/admin/license-configs' },
     { label: '考场管理', desc: '管理考场信息', icon: OfficeBuilding, type: 'warning', route: '/admin/exam-venues' },
     { label: '特种车辆考试', desc: '管理特种车辆成绩', icon: Van, type: 'info', route: '/admin/special-exams' },
+    { label: '准教车型审核', desc: '审核教练车型变更', icon: Bicycle, type: '', route: '/admin/vehicle-application-review' },
   ],
 }
 

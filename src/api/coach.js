@@ -78,3 +78,23 @@ export function applyCoach(studentId, coachId) {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   })
 }
+
+// 获取教练信息（含当前准教车型）
+export function getCoachRating() {
+  return request.get('/coach-portal/rating')
+}
+
+// 提交准教车型变更申请
+export function submitVehicleApplication(requestedVehicleType, applyReason) {
+  const params = new URLSearchParams()
+  params.append('requestedVehicleType', requestedVehicleType)
+  if (applyReason) params.append('applyReason', applyReason)
+  return request.post('/coach-portal/vehicle-applications', params, {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  })
+}
+
+// 获取本人的申请记录
+export function getCoachVehicleApplications() {
+  return request.get('/coach-portal/vehicle-applications')
+}
