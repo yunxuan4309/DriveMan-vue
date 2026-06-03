@@ -146,6 +146,31 @@ const routes = [
         component: () => import('@/views/admin/Statistics.vue'),
         meta: { title: '统计报表', roles: [3] },
       },
+      // ── 基础数据管理 ─────────────────────────────────────
+      {
+        path: 'fee-standards',
+        name: 'FeeStandardManage',
+        component: () => import('@/views/admin/FeeStandardManage.vue'),
+        meta: { title: '费用标准管理', roles: [3] },
+      },
+      {
+        path: 'license-configs',
+        name: 'LicenseConfigManage',
+        component: () => import('@/views/admin/LicenseConfigManage.vue'),
+        meta: { title: '车型科目配置', roles: [3] },
+      },
+      {
+        path: 'exam-venues',
+        name: 'ExamVenueManage',
+        component: () => import('@/views/admin/ExamVenueManage.vue'),
+        meta: { title: '考场信息管理', roles: [3] },
+      },
+      {
+        path: 'special-exams',
+        name: 'SpecialExamManage',
+        component: () => import('@/views/admin/SpecialExamManage.vue'),
+        meta: { title: '特种车辆考试管理', roles: [3] },
+      },
     ],
   },
 ]

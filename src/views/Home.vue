@@ -56,6 +56,10 @@ import {
   School,
   Avatar,
   DataAnalysis,
+  Money,
+  Bicycle,
+  OfficeBuilding,
+  Van,
 } from '@element-plus/icons-vue'
 
 const userStore = useUserStore()
@@ -85,6 +89,10 @@ const menuMap = {
     { label: '教练分配', desc: '为学员分配教练', icon: School, type: 'success', route: '/admin/coach-assignment' },
     { label: '文件管理', desc: '管理所有文件', icon: FolderOpened, type: 'info', route: '/admin/files' },
     { label: '统计报表', desc: '查看统计数据', icon: DataAnalysis, type: 'danger', route: '/admin/statistics' },
+    { label: '费用标准', desc: '管理培训费用', icon: Money, type: 'primary', route: '/admin/fee-standards' },
+    { label: '车型配置', desc: '管理车型科目', icon: Bicycle, type: 'success', route: '/admin/license-configs' },
+    { label: '考场管理', desc: '管理考场信息', icon: OfficeBuilding, type: 'warning', route: '/admin/exam-venues' },
+    { label: '特种车辆考试', desc: '管理特种车辆成绩', icon: Van, type: 'info', route: '/admin/special-exams' },
   ],
 }
 

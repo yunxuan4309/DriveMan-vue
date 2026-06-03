@@ -14,6 +14,13 @@
           <template #title>管理后台</template>
           <el-menu-item index="/admin/students">学员管理</el-menu-item>
           <el-menu-item index="/admin/coaches">教练管理</el-menu-item>
+          <el-sub-menu index="/admin/base-data">
+            <template #title>基础数据管理</template>
+            <el-menu-item index="/admin/fee-standards">费用标准管理</el-menu-item>
+            <el-menu-item index="/admin/license-configs">车型科目配置</el-menu-item>
+            <el-menu-item index="/admin/exam-venues">考场信息管理</el-menu-item>
+            <el-menu-item index="/admin/special-exams">特种车辆考试管理</el-menu-item>
+          </el-sub-menu>
         </el-sub-menu>
         <el-menu-item index="/about">关于</el-menu-item>
       </el-menu>
