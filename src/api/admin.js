@@ -22,3 +22,13 @@ export function auditVehicleApplication(id, pass, auditReason) {
     return request.put(`/coach-vehicle-applications/${id}/audit?pass=false&auditReason=${encodeURIComponent(auditReason)}`)
   }
 }
+
+// 按条件查询文件（管理员专用）
+export function queryFiles(params) {
+  return request.get('/files/admin/query', { params })
+}
+
+// 查询某用户的所有文件
+export function getUserFiles(userId) {
+  return request.get(`/files/user/${userId}`)
+}

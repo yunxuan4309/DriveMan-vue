@@ -95,6 +95,12 @@ const routes = [
         component: () => import('@/views/coach/VehicleApplication.vue'),
         meta: { title: '准教车型申请', roles: [2] },
       },
+      {
+        path: 'files',
+        name: 'CoachMyFiles',
+        component: () => import('@/views/coach/MyFiles.vue'),
+        meta: { title: '文件管理', roles: [2] },
+      },
     ],
   },
   // ── 管理后台路由（仅管理员可访问）─────────────────────

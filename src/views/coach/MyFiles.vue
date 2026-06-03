@@ -1,17 +1,12 @@
 <template>
-  <div class="my-files">
+  <div class="coach-files">
     <el-card>
       <template #header>
         <div class="card-header">
           <span>文件管理</span>
-          <div class="header-actions">
-            <el-button type="success" @click="handleGenerateRecord" :loading="generating">
-              <el-icon><Document /></el-icon>生成培训记录表
-            </el-button>
-            <el-button type="primary" @click="handleUpload">
-              <el-icon><Plus /></el-icon>上传文件
-            </el-button>
-          </div>
+          <el-button type="primary" @click="handleUpload">
+            <el-icon><Plus /></el-icon>上传文件
+          </el-button>
         </div>
       </template>
 
@@ -20,22 +15,15 @@
         <el-form-item label="业务类型">
           <el-select v-model="searchForm.bizType" placeholder="全部" clearable style="width: 160px" @change="handleSearch">
             <el-option label="用户资料" value="user_profile" />
-            <el-option label="报名材料" value="enrollment" />
-            <el-option label="准考证" value="exam_ticket" />
-            <el-option label="报名表" value="registration_form" />
-            <el-option label="培训记录表" value="training_record" />
-            <el-option label="体检报告" value="physical_exam" />
+            <el-option label="教练资质材料" value="coach_qualification" />
+            <el-option label="增驾/准教车型变更" value="license_upgrade" />
           </el-select>
         </el-form-item>
         <el-form-item label="文件分类">
           <el-select v-model="searchForm.fileType" placeholder="全部" clearable style="width: 140px" @change="handleSearch">
             <el-option label="身份证正面" value="id_card_front" />
             <el-option label="身份证反面" value="id_card_back" />
-            <el-option label="体检表" value="physical_exam" />
-            <el-option label="报名表" value="registration_pdf" />
-            <el-option label="准考证" value="admission_ticket" />
-            <el-option label="培训记录表" value="training_record" />
-            <el-option label="教练资质" value="coach_qualification" />
+            <el-option label="教练资质材料" value="coach_qualification" />
           </el-select>
         </el-form-item>
         <el-form-item label="关键词">
@@ -55,7 +43,7 @@
             <el-tag size="small">{{ getFileTypeLabel(row.fileType) }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="bizType" label="业务类型" width="100" align="center">
+        <el-table-column prop="bizType" label="业务类型" width="130" align="center">
           <template #default="{ row }">
             <el-tag size="small" type="info">{{ getBizTypeLabel(row.bizType) }}</el-tag>
           </template>
@@ -81,18 +69,6 @@
           </template>
         </el-table-column>
       </el-table>
-
-      <div class="pagination-container">
-        <el-pagination
-          v-model:current-page="pagination.page"
-          v-model:page-size="pagination.size"
-          :total="pagination.total"
-          layout="total, sizes, prev, pager, next, jumper"
-          :page-sizes="[5, 10, 20]"
-          @size-change="fetchFiles"
-          @current-change="fetchFiles"
-        />
-      </div>
     </el-card>
 
     <!-- 上传文件对话框 -->
@@ -101,19 +77,14 @@
         <el-form-item label="业务类型" prop="bizType">
           <el-select v-model="uploadForm.bizType" placeholder="请选择业务类型" style="width: 100%">
             <el-option label="用户资料" value="user_profile" />
-            <el-option label="报名材料" value="enrollment" />
-            <el-option label="体检报告" value="physical_exam" />
-            <el-option label="增驾/准教车型变更材料" value="license_upgrade" />
+            <el-option label="教练资质材料" value="coach_qualification" />
+            <el-option label="增驾/准教车型变更" value="license_upgrade" />
           </el-select>
         </el-form-item>
         <el-form-item label="文件分类" prop="fileType">
           <el-select v-model="uploadForm.fileType" placeholder="请选择文件分类" style="width: 100%">
             <el-option label="身份证正面" value="id_card_front" />
             <el-option label="身份证反面" value="id_card_back" />
-            <el-option label="体检表" value="physical_exam" />
-            <el-option label="报名表 PDF" value="registration_pdf" />
-            <el-option label="准考证 PDF" value="admission_ticket" />
-            <el-option label="培训记录表 PDF" value="training_record" />
             <el-option label="教练资质材料" value="coach_qualification" />
           </el-select>
         </el-form-item>
@@ -142,29 +113,23 @@
     <!-- 预览对话框 -->
     <el-dialog v-model="previewDialogVisible" title="文件预览" width="800px" destroy-on-close>
       <div class="preview-container">
-        <iframe v-if="previewUrl && isPdfOrImage" :src="previewUrl" class="preview-iframe" />
-        <img v-else-if="previewUrl && isImage" :src="previewUrl" class="preview-image" alt="预览" />
-        <div v-else class="preview-unsupported">
-          <el-icon :size="48"><Document /></el-icon>
-          <p>此文件类型暂不支持预览，请下载后查看</p>
-        </div>
+        <iframe v-if="previewUrl" :src="previewUrl" class="preview-iframe" />
       </div>
     </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Document } from '@element-plus/icons-vue'
-import { getMyFiles, uploadFile, downloadFile, generateTrainingRecord } from '@/api/file'
+import { Plus } from '@element-plus/icons-vue'
+import { getMyFiles, uploadFile, downloadFile } from '@/api/file'
 import { useUserStore } from '@/stores/user'
 
 const userStore = useUserStore()
 
 const fileList = ref([])
 const loading = ref(false)
-const pagination = reactive({ page: 1, size: 10, total: 0 })
 
 const searchForm = reactive({
   bizType: '',
@@ -177,7 +142,6 @@ const uploadFormRef = ref(null)
 const uploadForm = reactive({ bizType: '', fileType: '', file: null })
 const uploadRef = ref(null)
 const uploadLoading = ref(false)
-const generating = ref(false)
 
 const previewDialogVisible = ref(false)
 const previewUrl = ref('')
@@ -189,33 +153,16 @@ const uploadRules = {
 
 const acceptTypes = '.jpg,.jpeg,.png,.bmp,.webp,.pdf'
 
-const isPdfOrImage = computed(() => {
-  return previewUrl.value && (previewUrl.value.includes('.pdf') || isImage.value)
-})
-
-const isImage = computed(() => {
-  return previewUrl.value && /\.(jpg|jpeg|png|bmp|webp)/i.test(previewUrl.value)
-})
-
 const fileTypeMap = {
   id_card_front: '身份证正面',
   id_card_back: '身份证反面',
-  physical_exam: '体检表',
-  registration_pdf: '报名表 PDF',
-  admission_ticket: '准考证 PDF',
-  training_record: '培训记录表 PDF',
   coach_qualification: '教练资质材料',
 }
 
 const bizTypeMap = {
   user_profile: '用户资料',
-  enrollment: '报名材料',
-  exam_ticket: '准考证',
-  registration_form: '报名表',
-  training_record: '培训记录表',
-  physical_exam: '体检报告',
-  license_upgrade: '增驾/准教车型变更',
   coach_qualification: '教练资质',
+  license_upgrade: '增驾/准教车型变更',
 }
 
 function getFileTypeLabel(type) {
@@ -244,17 +191,13 @@ function formatDateTime(dateTime) {
 async function fetchFiles() {
   loading.value = true
   try {
-    const params = {
-      page: pagination.page,
-      size: pagination.size,
-    }
+    const params = {}
     if (searchForm.bizType) params.bizType = searchForm.bizType
     if (searchForm.fileType) params.fileType = searchForm.fileType
     if (searchForm.keyword) params.keyword = searchForm.keyword
 
     const res = await getMyFiles(params)
-    fileList.value = Array.isArray(res) ? res : res.records || []
-    pagination.total = res.total || fileList.value.length
+    fileList.value = Array.isArray(res) ? res : []
   } catch (error) {
     console.error('获取文件列表失败:', error)
   } finally {
@@ -263,7 +206,6 @@ async function fetchFiles() {
 }
 
 function handleSearch() {
-  pagination.page = 1
   fetchFiles()
 }
 
@@ -271,7 +213,7 @@ function handleReset() {
   searchForm.bizType = ''
   searchForm.fileType = ''
   searchForm.keyword = ''
-  handleSearch()
+  fetchFiles()
 }
 
 function onFileChange(uploadFile) {
@@ -294,7 +236,6 @@ async function handleUploadSubmit() {
     return
   }
 
-  // 校验文件大小（5MB）
   if (uploadForm.file.size > 5 * 1024 * 1024) {
     ElMessage.warning('文件大小不能超过 5MB')
     return
@@ -339,26 +280,6 @@ async function handleDownload(row) {
   }
 }
 
-async function handleGenerateRecord() {
-  try {
-    await ElMessageBox.confirm(
-      '确定要生成培训记录表吗？\n请确保学时已达标。',
-      '生成培训记录表',
-      { type: 'info' }
-    )
-    generating.value = true
-    const res = await generateTrainingRecord(userStore.userId)
-    ElMessage.success('培训记录表已生成')
-    fetchFiles()
-  } catch (error) {
-    if (error !== 'cancel') {
-      console.error('生成失败:', error)
-    }
-  } finally {
-    generating.value = false
-  }
-}
-
 onMounted(fetchFiles)
 </script>
 
@@ -369,22 +290,11 @@ onMounted(fetchFiles)
   align-items: center;
 }
 
-.header-actions {
-  display: flex;
-  gap: 10px;
-}
-
 .search-form {
   margin-bottom: 20px;
   padding: 20px;
   background-color: #f5f7fa;
   border-radius: 4px;
-}
-
-.pagination-container {
-  margin-top: 20px;
-  display: flex;
-  justify-content: flex-end;
 }
 
 .upload-tip {
@@ -404,19 +314,5 @@ onMounted(fetchFiles)
   width: 100%;
   height: 600px;
   border: none;
-}
-
-.preview-image {
-  max-width: 100%;
-  max-height: 600px;
-}
-
-.preview-unsupported {
-  text-align: center;
-  color: #909399;
-
-  p {
-    margin-top: 16px;
-  }
 }
 </style>

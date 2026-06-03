@@ -79,6 +79,7 @@ const menuMap = {
     { label: '学员考试', desc: '查看学员考试状态', icon: Trophy, type: 'warning', route: '/coach/exam' },
     { label: '考试场次', desc: '查看考试场次信息', icon: Edit, type: 'info', route: '/coach/exam-sessions' },
     { label: '准教车型申请', desc: '申请增加可教车型', icon: Bicycle, type: '', route: '/coach/vehicle-application' },
+    { label: '文件管理', desc: '上传和管理文件', icon: FolderOpened, type: '', route: '/coach/files' },
   ],
   3: [
     { label: '学员管理', desc: '管理所有学员', icon: Avatar, type: 'primary', route: '/admin/students' },
