@@ -62,3 +62,15 @@ export function getExamRegistrationList(params) {
 export function getStudentExamRegistrations(studentId) {
   return request.get(`/exam-registrations/student/${studentId}`)
 }
+
+// 查询我的各科成绩（学员端）
+export function getMyScores(studentId) {
+  return request.get(`/exam-registrations/my-scores/${studentId}`)
+}
+
+// ── 教练端 ────────────────────────────────────────────
+
+// 教练查看名下学员的考试报名
+export function getCoachExamRegistrations() {
+  return request.get('/coach-portal/exam-registrations')
+}
