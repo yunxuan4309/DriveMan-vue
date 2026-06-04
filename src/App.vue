@@ -17,6 +17,7 @@
           <el-menu-item index="/admin/vehicle-application-review">准教车型审核</el-menu-item>
           <el-menu-item index="/admin/familiarization-manage">合场管理</el-menu-item>
           <el-menu-item index="/admin/payment-manage">支付管理</el-menu-item>
+          <el-menu-item index="/admin/retake-training">二次培训管理</el-menu-item>
           <el-sub-menu index="/admin/base-data">
             <template #title>基础数据管理</template>
             <el-menu-item index="/admin/fee-standards">费用标准管理</el-menu-item>

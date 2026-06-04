@@ -75,6 +75,7 @@ const menuMap = {
     { label: '我的成绩', desc: '查看考试成绩', icon: Trophy, type: 'danger', route: '/student/scores' },
     { label: '合场申请', desc: '申请考试合场', icon: Van, type: '', route: '/student/familiarization' },
     { label: '我的账单', desc: '查看支付记录', icon: Money, type: '', route: '/student/payments' },
+    { label: '二次培训', desc: '挂科补考培训', icon: Edit, type: '', route: '/student/retake-training' },
   ],
   2: [
     { label: '我的课程', desc: '查看课程安排', icon: Calendar, type: 'primary', route: '/coach/courses' },
@@ -84,6 +85,7 @@ const menuMap = {
     { label: '考试场次', desc: '查看考试场次信息', icon: Edit, type: 'info', route: '/coach/exam-sessions' },
     { label: '准教车型申请', desc: '申请增加可教车型', icon: Bicycle, type: '', route: '/coach/vehicle-application' },
     { label: '文件管理', desc: '上传和管理文件', icon: FolderOpened, type: '', route: '/coach/files' },
+    { label: '二次培训', desc: '学员补考培训', icon: Edit, type: '', route: '/coach/retake-training' },
   ],
   3: [
     { label: '学员管理', desc: '管理所有学员', icon: Avatar, type: 'primary', route: '/admin/students' },
@@ -103,6 +105,7 @@ const menuMap = {
     { label: '准教车型审核', desc: '审核教练车型变更', icon: Bicycle, type: '', route: '/admin/vehicle-application-review' },
     { label: '合场管理', desc: '管理合场安排', icon: Van, type: '', route: '/admin/familiarization-manage' },
     { label: '支付管理', desc: '管理支付账单', icon: Money, type: '', route: '/admin/payment-manage' },
+    { label: '二次培训', desc: '管理补考培训审核', icon: Edit, type: '', route: '/admin/retake-training' },
   ],
 }
 

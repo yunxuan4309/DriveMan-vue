@@ -68,6 +68,12 @@ const routes = [
         component: () => import('@/views/student/MyPayments.vue'),
         meta: { title: '我的账单', roles: [1] },
       },
+      {
+        path: 'retake-training',
+        name: 'StudentRetakeTraining',
+        component: () => import('@/views/student/RetakeTraining.vue'),
+        meta: { title: '二次培训', roles: [1] },
+      },
     ],
   },
   // ── 教练功能路由 ─────────────────────────────────────
@@ -118,6 +124,12 @@ const routes = [
         name: 'CoachMyFiles',
         component: () => import('@/views/coach/MyFiles.vue'),
         meta: { title: '文件管理', roles: [2] },
+      },
+      {
+        path: 'retake-training',
+        name: 'CoachRetakeTraining',
+        component: () => import('@/views/coach/RetakeTrainingManage.vue'),
+        meta: { title: '二次培训管理', roles: [2] },
       },
     ],
   },
@@ -224,6 +236,12 @@ const routes = [
         name: 'PaymentManage',
         component: () => import('@/views/admin/PaymentManage.vue'),
         meta: { title: '支付管理', roles: [3] },
+      },
+      {
+        path: 'retake-training',
+        name: 'AdminRetakeTraining',
+        component: () => import('@/views/admin/RetakeTrainingManage.vue'),
+        meta: { title: '二次培训管理', roles: [3] },
       },
     ],
   },
