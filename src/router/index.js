@@ -56,6 +56,18 @@ const routes = [
         component: () => import('@/views/student/MyScores.vue'),
         meta: { title: '我的成绩', roles: [1] },
       },
+      {
+        path: 'familiarization',
+        name: 'StudentFamiliarization',
+        component: () => import('@/views/student/Familiarization.vue'),
+        meta: { title: '合场申请', roles: [1] },
+      },
+      {
+        path: 'payments',
+        name: 'StudentMyPayments',
+        component: () => import('@/views/student/MyPayments.vue'),
+        meta: { title: '我的账单', roles: [1] },
+      },
     ],
   },
   // ── 教练功能路由 ─────────────────────────────────────
@@ -194,6 +206,18 @@ const routes = [
         name: 'VehicleApplicationReview',
         component: () => import('@/views/admin/VehicleApplicationReview.vue'),
         meta: { title: '准教车型审核', roles: [3] },
+      },
+      {
+        path: 'familiarization-manage',
+        name: 'FamiliarizationManage',
+        component: () => import('@/views/admin/FamiliarizationManage.vue'),
+        meta: { title: '合场管理', roles: [3] },
+      },
+      {
+        path: 'payment-manage',
+        name: 'PaymentManage',
+        component: () => import('@/views/admin/PaymentManage.vue'),
+        meta: { title: '支付管理', roles: [3] },
       },
     ],
   },
