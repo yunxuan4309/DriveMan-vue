@@ -74,6 +74,18 @@ const routes = [
         component: () => import('@/views/student/RetakeTraining.vue'),
         meta: { title: '二次培训', roles: [1] },
       },
+      {
+        path: 'physical-exam',
+        name: 'StudentPhysicalExam',
+        component: () => import('@/views/student/PhysicalExam.vue'),
+        meta: { title: '体检申请', roles: [1] },
+      },
+      {
+        path: 'license-upgrade',
+        name: 'StudentLicenseUpgrade',
+        component: () => import('@/views/student/LicenseUpgrade.vue'),
+        meta: { title: '增驾申请', roles: [1] },
+      },
     ],
   },
   // ── 教练功能路由 ─────────────────────────────────────
@@ -208,10 +220,10 @@ const routes = [
         meta: { title: '车型科目配置', roles: [3] },
       },
       {
-        path: 'exam-venues',
-        name: 'ExamVenueManage',
-        component: () => import('@/views/admin/ExamVenueManage.vue'),
-        meta: { title: '考场信息管理', roles: [3] },
+        path: 'venues',
+        name: 'VenueManage',
+        component: () => import('@/views/admin/VenueManage.vue'),
+        meta: { title: '场地管理', roles: [3] },
       },
       {
         path: 'special-exams',
@@ -242,6 +254,18 @@ const routes = [
         name: 'AdminRetakeTraining',
         component: () => import('@/views/admin/RetakeTrainingManage.vue'),
         meta: { title: '二次培训管理', roles: [3] },
+      },
+      {
+        path: 'physical-exam-manage',
+        name: 'AdminPhysicalExam',
+        component: () => import('@/views/admin/PhysicalExamManage.vue'),
+        meta: { title: '体检管理', roles: [3] },
+      },
+      {
+        path: 'license-upgrade-manage',
+        name: 'AdminLicenseUpgrade',
+        component: () => import('@/views/admin/LicenseUpgradeManage.vue'),
+        meta: { title: '增驾申请管理', roles: [3] },
       },
     ],
   },

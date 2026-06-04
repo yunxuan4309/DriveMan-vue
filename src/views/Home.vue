@@ -76,6 +76,8 @@ const menuMap = {
     { label: '合场申请', desc: '申请考试合场', icon: Van, type: '', route: '/student/familiarization' },
     { label: '我的账单', desc: '查看支付记录', icon: Money, type: '', route: '/student/payments' },
     { label: '二次培训', desc: '挂科补考培训', icon: Edit, type: '', route: '/student/retake-training' },
+    { label: '体检申请', desc: '预约体检', icon: Document, type: '', route: '/student/physical-exam' },
+    { label: '增驾申请', desc: '申请增驾车型', icon: Trophy, type: '', route: '/student/license-upgrade' },
   ],
   2: [
     { label: '我的课程', desc: '查看课程安排', icon: Calendar, type: 'primary', route: '/coach/courses' },
@@ -100,12 +102,14 @@ const menuMap = {
     { label: '统计报表', desc: '查看统计数据', icon: DataAnalysis, type: 'danger', route: '/admin/statistics' },
     { label: '费用标准', desc: '管理培训费用', icon: Money, type: 'primary', route: '/admin/fee-standards' },
     { label: '车型配置', desc: '管理车型科目', icon: Bicycle, type: 'success', route: '/admin/license-configs' },
-    { label: '考场管理', desc: '管理考场信息', icon: OfficeBuilding, type: 'warning', route: '/admin/exam-venues' },
+    { label: '场地管理', desc: '统一管理考场/训练场/体检点', icon: OfficeBuilding, type: 'warning', route: '/admin/venues' },
     { label: '特种车辆考试', desc: '管理特种车辆成绩', icon: Van, type: 'info', route: '/admin/special-exams' },
     { label: '准教车型审核', desc: '审核教练车型变更', icon: Bicycle, type: '', route: '/admin/vehicle-application-review' },
     { label: '合场管理', desc: '管理合场安排', icon: Van, type: '', route: '/admin/familiarization-manage' },
     { label: '支付管理', desc: '管理支付账单', icon: Money, type: '', route: '/admin/payment-manage' },
     { label: '二次培训', desc: '管理补考培训审核', icon: Edit, type: '', route: '/admin/retake-training' },
+    { label: '体检管理', desc: '审核体检申请录入结果', icon: Document, type: '', route: '/admin/physical-exam-manage' },
+    { label: '增驾管理', desc: '审核增驾申请录入成绩', icon: Trophy, type: '', route: '/admin/license-upgrade-manage' },
   ],
 }
 
