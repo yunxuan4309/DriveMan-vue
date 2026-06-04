@@ -48,9 +48,9 @@
           <el-select v-model="assignForm.studentId" placeholder="请选择学员" filterable style="width: 100%">
             <el-option
               v-for="s in studentList"
-              :key="s.userId"
-              :label="s.realName + ' (' + s.username + ')'"
-              :value="s.userId"
+              :key="s.studentId || s.userId"
+              :label="(s.realName || s.username) + ' (ID:' + (s.studentId || s.userId) + ')'"
+              :value="s.studentId || s.userId"
             />
           </el-select>
         </el-form-item>
@@ -78,7 +78,7 @@ import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import { getCoachAssignments, assignCoach, unbindCoach, getCoachList } from '@/api/coach'
-import { getUserList } from '@/api/user'
+import { getStudentList } from '@/api/student'
 
 const assignmentList = ref([])
 const loading = ref(false)
@@ -109,8 +109,8 @@ async function fetchAssignments() {
 
 async function fetchStudents() {
   try {
-    const res = await getUserList({ role: 1 })
-    studentList.value = res.records || []
+    const res = await getStudentList()
+    studentList.value = Array.isArray(res) ? res : res.records || []
   } catch (error) {
     console.error('获取学员列表失败:', error)
   }

@@ -108,6 +108,12 @@ const routes = [
         meta: { title: '准教车型申请', roles: [2] },
       },
       {
+        path: 'student-transfer',
+        name: 'CoachStudentTransfer',
+        component: () => import('@/views/coach/StudentTransfer.vue'),
+        meta: { title: '学员移交', roles: [2] },
+      },
+      {
         path: 'files',
         name: 'CoachMyFiles',
         component: () => import('@/views/coach/MyFiles.vue'),

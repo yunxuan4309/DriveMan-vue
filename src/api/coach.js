@@ -98,3 +98,42 @@ export function submitVehicleApplication(requestedVehicleType, applyReason) {
 export function getCoachVehicleApplications() {
   return request.get('/coach-portal/vehicle-applications')
 }
+
+// ═══════════════════════════════════════════════════════
+// 教练分配管理 API
+// ═══════════════════════════════════════════════════════
+
+// 按教练查询名下学员
+export function getCoachStudents(coachId) {
+  return request.get(`/coach-assignments/coach/${coachId}/students`)
+}
+
+// 查询我的教练
+export function getMyCoach(studentId) {
+  return request.get(`/coach-assignments/my-coach/${studentId}`)
+}
+
+// 教练查看自己的学员列表（教练端专用）
+export function getMyStudents() {
+  return request.get('/coach-portal/students')
+}
+
+// ═══════════════════════════════════════════════════════
+// 教练移交学员 API
+// ═══════════════════════════════════════════════════════
+
+// 教练申请移交学员
+export function applyStudentTransfer(studentId, targetCoachId, reason) {
+  const params = new URLSearchParams()
+  params.append('studentId', studentId)
+  params.append('targetCoachId', targetCoachId)
+  params.append('reason', reason)
+  return request.post('/coach-portal/student-transfers', params, {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  })
+}
+
+// 查看教练本人的移交申请记录
+export function getCoachTransferRecords() {
+  return request.get('/coach-portal/student-transfers')
+}

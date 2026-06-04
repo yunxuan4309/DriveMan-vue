@@ -1,78 +1,119 @@
 <template>
   <div class="coach-apply">
-    <el-card>
+    <!-- 我的教练 -->
+    <el-card style="margin-bottom: 20px">
       <template #header>
-        <div class="card-header">
-          <span>教练申请</span>
-          <el-button type="warning" @click="fetchCoaches">
-            <el-icon><Search /></el-icon>查看可申请教练
-          </el-button>
-        </div>
+        <span>我的教练</span>
       </template>
-
-      <!-- 教练列表 -->
-      <div v-loading="coachLoading">
-        <el-row :gutter="16" v-if="coachList.length > 0">
-          <el-col :xs="24" :sm="12" :md="8" v-for="c in coachList" :key="c.coachId" style="margin-bottom: 16px">
-            <el-card shadow="hover" class="coach-card">
-              <div class="coach-item">
-                <div class="coach-avatar">
-                  <el-avatar :size="48" icon="UserFilled" />
-                </div>
-                <div class="coach-info">
-                  <h4>{{ c.realName || '未知' }}</h4>
-                  <p>
-                    <el-tag size="small">{{ c.vehicleType }}</el-tag>
-                    <span class="rating-text">
-                      <el-icon style="color: #f7ba2a"><StarFilled /></el-icon>
-                      {{ c.rating }}
-                    </span>
-                  </p>
-                  <p class="coach-detail">教龄: {{ c.coachYears }}年</p>
-                </div>
-                <div class="coach-action">
-                  <el-button
-                    type="warning"
-                    size="small"
-                    :loading="applyingId === c.coachId"
-                    @click="handleApply(c)"
-                  >
-                    申请
-                  </el-button>
-                </div>
-              </div>
-            </el-card>
-          </el-col>
-        </el-row>
-        <el-empty v-else description="暂无教练数据" />
+      <div v-loading="myCoachLoading">
+        <div v-if="myCoach" class="my-coach-info">
+          <el-avatar :size="56" icon="UserFilled" style="flex-shrink: 0" />
+          <div class="coach-detail">
+            <h3>{{ myCoach.realName }}</h3>
+            <p>
+              <el-tag size="small">{{ myCoach.vehicleType }}</el-tag>
+              <span style="margin-left: 12px">
+                <el-rate v-model="myCoach.rating" disabled show-score score-template="{value}" />
+              </span>
+            </p>
+            <p class="text-gray">教龄 {{ myCoach.coachYears }} 年 · 绑定时间：{{ formatDateTime(myCoach.bindTime) }}</p>
+          </div>
+        </div>
+        <el-empty v-else description="您当前没有绑定的教练" />
       </div>
     </el-card>
 
+    <!-- 推荐教练 & 全部教练 -->
+    <el-card style="margin-bottom: 20px">
+      <template #header>
+        <div class="card-header">
+          <span>教练列表</span>
+        </div>
+      </template>
+      <el-tabs v-model="coachTab">
+        <el-tab-pane label="推荐教练" name="recommend">
+          <div v-loading="recommendLoading">
+            <el-row :gutter="16" v-if="recommendList.length > 0">
+              <el-col :xs="24" :sm="12" :md="8" v-for="c in recommendList" :key="c.coachId" style="margin-bottom: 16px">
+                <el-card shadow="hover" class="coach-card" :class="{ 'is-recommended': true }">
+                  <div class="coach-item">
+                    <el-avatar :size="48" icon="UserFilled" />
+                    <div class="coach-info">
+                      <h4>{{ c.realName || '教练' }}</h4>
+                      <p>
+                        <el-tag size="small">{{ c.vehicleType }}</el-tag>
+                        <el-rate v-model="c.rating" disabled show-score size="small" score-template="{value}" style="display: inline-block; margin-left: 4px" />
+                      </p>
+                      <p class="coach-detail">{{ c.coachYears }} 年教龄</p>
+                    </div>
+                    <el-button type="warning" size="small" :loading="applyingId === c.coachId" @click="handleApply(c)">申请</el-button>
+                  </div>
+                </el-card>
+              </el-col>
+            </el-row>
+            <el-empty v-else description="暂无推荐教练" />
+          </div>
+        </el-tab-pane>
+        <el-tab-pane label="全部教练" name="all">
+          <div v-loading="coachLoading">
+            <el-row :gutter="16" v-if="coachList.length > 0">
+              <el-col :xs="24" :sm="12" :md="8" v-for="c in coachList" :key="c.coachId" style="margin-bottom: 16px">
+                <el-card shadow="hover" class="coach-card">
+                  <div class="coach-item">
+                    <el-avatar :size="48" icon="UserFilled" />
+                    <div class="coach-info">
+                      <h4>{{ c.realName || '教练' }}</h4>
+                      <p>
+                        <el-tag size="small">{{ c.vehicleType }}</el-tag>
+                        <el-rate v-model="c.rating" disabled show-score size="small" score-template="{value}" style="display: inline-block; margin-left: 4px" />
+                      </p>
+                      <p class="coach-detail">{{ c.coachYears }} 年教龄</p>
+                    </div>
+                    <el-button type="warning" size="small" :loading="applyingId === c.coachId" @click="handleApply(c)">申请</el-button>
+                  </div>
+                </el-card>
+              </el-col>
+            </el-row>
+            <el-empty v-else description="暂无教练数据" />
+          </div>
+        </el-tab-pane>
+      </el-tabs>
+    </el-card>
+
     <!-- 我的申请记录 -->
-    <el-card style="margin-top: 20px">
+    <el-card>
       <template #header>
         <span>我的申请记录</span>
+        <el-button text type="primary" @click="fetchApplications" :icon="Refresh">刷新</el-button>
       </template>
       <el-table :data="applicationList" v-loading="appLoading" border stripe>
         <el-table-column type="index" label="序号" width="60" align="center" />
-        <el-table-column prop="coachName" label="教练姓名" width="120" />
-        <el-table-column prop="vehicleType" label="准教车型" width="100" align="center" />
-        <el-table-column prop="status" label="状态" width="100" align="center">
+        <el-table-column prop="coachName" label="目标教练" width="100">
+          <template #default="{ row }">
+            {{ row.coachName || '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column label="状态" width="100" align="center">
           <template #default="{ row }">
             <el-tag :type="row.status === 0 ? 'warning' : row.status === 1 ? 'success' : 'danger'">
               {{ row.status === 0 ? '待审核' : row.status === 1 ? '已通过' : '已拒绝' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="reason" label="审核原因" min-width="150" show-overflow-tooltip>
+        <el-table-column label="拒绝原因" min-width="150" show-overflow-tooltip>
           <template #default="{ row }">
-            <span v-if="row.reason">{{ row.reason }}</span>
+            <span v-if="row.status === 2 && row.auditReason" style="color: #f56c6c">{{ row.auditReason }}</span>
             <span v-else class="text-gray">-</span>
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="申请时间" width="160">
+        <el-table-column label="申请时间" width="160" align="center">
           <template #default="{ row }">
-            {{ formatDateTime(row.createTime) }}
+            {{ formatDateTime(row.applyTime) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="审核时间" width="160" align="center">
+          <template #default="{ row }">
+            {{ row.auditTime ? formatDateTime(row.auditTime) : '-' }}
           </template>
         </el-table-column>
       </el-table>
@@ -92,21 +133,52 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, StarFilled, UserFilled } from '@element-plus/icons-vue'
-import { getCoachList, applyCoach, getStudentApplications } from '@/api/coach'
+import { Refresh, StarFilled, UserFilled } from '@element-plus/icons-vue'
+import { getCoachList, applyCoach, getStudentApplications, getMyCoach, recommendCoaches } from '@/api/coach'
 import { useUserStore } from '@/stores/user'
 
 const userStore = useUserStore()
+const myCoachLoading = ref(false)
+const myCoach = ref(null)
 
+const coachTab = ref('recommend')
+const recommendList = ref([])
+const recommendLoading = ref(false)
 const coachList = ref([])
 const coachLoading = ref(false)
 const applyingId = ref(null)
 
 const applicationList = ref([])
 const appLoading = ref(false)
-const appPagination = reactive({ page: 1, size: 10, total: 0 })
+const appPagination = ref({ page: 1, size: 10, total: 0 })
+
+async function fetchMyCoach() {
+  myCoachLoading.value = true
+  try {
+    const res = await getMyCoach(userStore.userId)
+    myCoach.value = res || null
+  } catch (error) {
+    console.error('获取我的教练失败:', error)
+    myCoach.value = null
+  } finally {
+    myCoachLoading.value = false
+  }
+}
+
+async function fetchRecommend() {
+  recommendLoading.value = true
+  try {
+    const res = await recommendCoaches(userStore.userId, 6)
+    recommendList.value = Array.isArray(res) ? res : []
+  } catch (error) {
+    console.error('获取推荐教练失败:', error)
+    recommendList.value = []
+  } finally {
+    recommendLoading.value = false
+  }
+}
 
 async function fetchCoaches() {
   coachLoading.value = true
@@ -125,7 +197,7 @@ async function fetchApplications() {
   try {
     const res = await getStudentApplications(userStore.userId)
     applicationList.value = Array.isArray(res) ? res : []
-    appPagination.total = applicationList.value.length
+    appPagination.value.total = applicationList.value.length
   } catch (error) {
     console.error('获取申请记录失败:', error)
   } finally {
@@ -136,7 +208,7 @@ async function fetchApplications() {
 async function handleApply(coach) {
   try {
     await ElMessageBox.confirm(
-      `确定要申请 "${coach.realName}" 作为您的教练吗？`,
+      `确定要申请 "${coach.realName || '教练'}" 作为您的教练吗？`,
       '确认申请',
       { type: 'info' }
     )
@@ -162,6 +234,8 @@ function formatDateTime(dateTime) {
 }
 
 onMounted(() => {
+  fetchMyCoach()
+  fetchRecommend()
   fetchCoaches()
   fetchApplications()
 })
@@ -178,10 +252,20 @@ onMounted(() => {
   display: flex;
   justify-content: flex-end;
 }
+.my-coach-info {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  .coach-detail {
+    h3 { margin: 0 0 6px; font-size: 18px; }
+    p { margin: 4px 0; font-size: 14px; }
+  }
+}
 .coach-card {
   cursor: pointer;
-  :deep(.el-card__body) {
-    padding: 16px;
+  :deep(.el-card__body) { padding: 16px; }
+  &.is-recommended {
+    border-left: 3px solid #e6a23c;
   }
 }
 .coach-item {
@@ -189,24 +273,12 @@ onMounted(() => {
   align-items: center;
   gap: 12px;
 }
-.coach-avatar {
-  flex-shrink: 0;
-}
 .coach-info {
   flex: 1;
   min-width: 0;
-  h4 { margin: 0 0 4px; font-size: 15px; }
+  h4 { margin: 0 0 2px; font-size: 15px; }
   p { margin: 2px 0; font-size: 13px; color: #666; }
-  .rating-text {
-    margin-left: 8px;
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-  }
   .coach-detail { color: #999; }
-}
-.coach-action {
-  flex-shrink: 0;
 }
 .text-gray { color: #909399; }
 </style>

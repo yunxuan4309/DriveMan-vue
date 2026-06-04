@@ -2,27 +2,49 @@
   <div class="coach-application-review">
     <el-card>
       <template #header>
-        <span>教练申请审核</span>
+        <div class="card-header">
+          <span>教练申请审核</span>
+          <el-button text type="primary" @click="fetchList" :icon="Refresh">刷新</el-button>
+        </div>
       </template>
 
       <el-table :data="appList" v-loading="loading" border stripe>
         <el-table-column type="index" label="序号" width="60" align="center" />
-        <el-table-column prop="studentName" label="学员姓名" width="100" />
-        <el-table-column prop="coachName" label="教练姓名" width="100" />
-        <el-table-column prop="vehicleType" label="准教车型" width="100" align="center" />
-        <el-table-column prop="status" label="状态" width="100" align="center">
+        <el-table-column label="申请类型" width="100" align="center">
           <template #default="{ row }">
-            <el-tag :type="row.status === 0 ? 'warning' : row.status === 1 ? 'success' : 'danger'">
-              {{ row.status === 0 ? '待审核' : row.status === 1 ? '已通过' : '已拒绝' }}
+            <el-tag :type="row.applyType === '教练移交' ? 'warning' : 'primary'" size="small">
+              {{ row.applyType || '学员申请' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="申请时间" width="160">
+        <el-table-column label="信息" min-width="200">
           <template #default="{ row }">
-            {{ formatDateTime(row.createTime) }}
+            <!-- 学员申请 -->
+            <template v-if="!row.applyType || row.applyType === '学员申请'">
+              <span>学员 {{ row.studentName }} 申请 {{ row.coachName }}</span>
+            </template>
+            <!-- 教练移交 -->
+            <template v-else-if="row.applyType === '教练移交'">
+              <div>
+                <span>教练 {{ row.sourceCoachName }} 申请将学员 {{ row.studentName }}</span>
+              </div>
+              <div style="color: #909399; font-size: 12px">
+                移交给 {{ row.coachName }}
+              </div>
+            </template>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="160" fixed="right">
+        <el-table-column label="移交原因" min-width="120" show-overflow-tooltip>
+          <template #default="{ row }">
+            {{ row.transferReason || '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column label="申请时间" width="160" align="center">
+          <template #default="{ row }">
+            {{ formatDateTime(row.applyTime) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="160" fixed="right" align="center">
           <template #default="{ row }">
             <template v-if="row.status === 0">
               <el-button link type="success" size="small" @click="handleAudit(row, true)">通过</el-button>
@@ -37,14 +59,29 @@
     </el-card>
 
     <!-- 审核对话框 -->
-    <el-dialog v-model="auditDialogVisible" title="审核教练申请" width="400px" destroy-on-close>
-      <p><strong>审核结果：</strong>
-        <el-tag :type="auditForm.pass ? 'success' : 'danger'">
-          {{ auditForm.pass ? '通过' : '拒绝' }}
+    <el-dialog v-model="auditDialogVisible" title="审核申请" width="450px" destroy-on-close>
+      <p style="margin-bottom: 16px">
+        <strong>申请类型：</strong>
+        <el-tag :type="currentRow?.applyType === '教练移交' ? 'warning' : 'primary'" size="small">
+          {{ currentRow?.applyType || '学员申请' }}
         </el-tag>
       </p>
-      <el-form :model="auditForm" label-width="60px" style="margin-top: 16px">
-        <el-form-item label="原因" v-if="!auditForm.pass">
+      <template v-if="currentRow?.applyType === '教练移交'">
+        <p>
+          <strong>移交说明：</strong>{{ currentRow?.sourceCoachName }} → {{ currentRow?.studentName }} → {{ currentRow?.coachName }}
+        </p>
+        <p style="color: #909399; font-size: 12px">
+          <strong>原因：</strong>{{ currentRow?.transferReason }}
+        </p>
+      </template>
+      <el-form :model="auditForm" label-width="80px" style="margin-top: 16px">
+        <el-form-item label="审核结果">
+          <el-radio-group v-model="auditForm.pass">
+            <el-radio :label="true">通过</el-radio>
+            <el-radio :label="false">拒绝</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="拒绝原因" v-if="!auditForm.pass">
           <el-input v-model="auditForm.reason" type="textarea" rows="3" placeholder="请输入拒绝原因" />
         </el-form-item>
       </el-form>
@@ -57,15 +94,17 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ref, reactive, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Refresh } from '@element-plus/icons-vue'
 import { getPendingApplications, auditApplication } from '@/api/coach'
 
 const appList = ref([])
 const loading = ref(false)
+const currentRow = ref(null)
 
 const auditDialogVisible = ref(false)
-const auditForm = ref({ id: undefined, pass: true, reason: '' })
+const auditForm = reactive({ id: undefined, pass: true, reason: '' })
 const auditLoading = ref(false)
 
 async function fetchList() {
@@ -81,19 +120,22 @@ async function fetchList() {
 }
 
 function handleAudit(row, pass) {
-  auditForm.value = { id: row.id, pass, reason: '' }
+  currentRow.value = row
+  auditForm.id = row.id
+  auditForm.pass = pass
+  auditForm.reason = ''
   auditDialogVisible.value = true
 }
 
 async function handleAuditSubmit() {
-  if (!auditForm.value.pass && !auditForm.value.reason) {
+  if (!auditForm.pass && !auditForm.reason) {
     ElMessage.warning('请输入拒绝原因')
     return
   }
   auditLoading.value = true
   try {
-    await auditApplication(auditForm.value.id, auditForm.value.pass, auditForm.value.reason)
-    ElMessage.success(auditForm.value.pass ? '已通过' : '已拒绝')
+    await auditApplication(auditForm.id, auditForm.pass, auditForm.reason)
+    ElMessage.success(auditForm.pass ? '已通过' : '已拒绝')
     auditDialogVisible.value = false
     fetchList()
   } catch (error) {
@@ -115,5 +157,13 @@ onMounted(fetchList)
 </script>
 
 <style scoped lang="scss">
-.text-gray { color: #909399; }
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.text-gray {
+  color: #909399;
+}
 </style>
