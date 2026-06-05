@@ -127,6 +127,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Refresh } from '@element-plus/icons-vue'
 import { getFamiliarizations, scheduleFamiliarization, completeFamiliarization, cancelFamiliarization } from '@/api/familiarization'
+import { getStudentList } from '@/api/student'
 
 const recordList = ref([])
 const loading = ref(false)
@@ -165,6 +166,19 @@ async function fetchList() {
   try {
     const res = await getFamiliarizations()
     let list = Array.isArray(res) ? res : []
+
+    // 补齐学员姓名（后端部分接口未返回 studentName）
+    const needNames = list.some(r => !r.studentName)
+    if (needNames && list.length > 0) {
+      const studentRes = await getStudentList({ page: 1, size: 9999 }).catch(() => null)
+      const studentMap = {}
+      if (studentRes?.records) {
+        studentRes.records.forEach(s => { studentMap[s.id] = s.realName || s.username })
+      }
+      list.forEach(r => {
+        if (!r.studentName) r.studentName = studentMap[r.studentId] || ''
+      })
+    }
 
     // 前端筛选
     if (searchForm.status !== undefined && searchForm.status !== null) {

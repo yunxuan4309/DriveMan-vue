@@ -138,6 +138,12 @@ const routes = [
         meta: { title: '文件管理', roles: [2] },
       },
       {
+        path: 'schedule',
+        name: 'CoachScheduleManage',
+        component: () => import('@/views/coach/ScheduleManage.vue'),
+        meta: { title: '排班管理', roles: [2] },
+      },
+      {
         path: 'retake-training',
         name: 'CoachRetakeTraining',
         component: () => import('@/views/coach/RetakeTrainingManage.vue'),
@@ -260,6 +266,18 @@ const routes = [
         name: 'AdminPhysicalExam',
         component: () => import('@/views/admin/PhysicalExamManage.vue'),
         meta: { title: '体检管理', roles: [3] },
+      },
+      {
+        path: 'vehicles',
+        name: 'VehicleManage',
+        component: () => import('@/views/admin/VehicleManage.vue'),
+        meta: { title: '车辆管理', roles: [3] },
+      },
+      {
+        path: 'schedule-review',
+        name: 'ScheduleReview',
+        component: () => import('@/views/admin/ScheduleReview.vue'),
+        meta: { title: '排班审核', roles: [3] },
       },
       {
         path: 'license-upgrade-manage',

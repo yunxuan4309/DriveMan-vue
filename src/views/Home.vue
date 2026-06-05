@@ -87,6 +87,7 @@ const menuMap = {
     { label: '考试场次', desc: '查看考试场次信息', icon: Edit, type: 'info', route: '/coach/exam-sessions' },
     { label: '准教车型申请', desc: '申请增加可教车型', icon: Bicycle, type: '', route: '/coach/vehicle-application' },
     { label: '文件管理', desc: '上传和管理文件', icon: FolderOpened, type: '', route: '/coach/files' },
+    { label: '排班管理', desc: '提交/管理排班', icon: Calendar, type: '', route: '/coach/schedule' },
     { label: '二次培训', desc: '学员补考培训', icon: Edit, type: '', route: '/coach/retake-training' },
   ],
   3: [
@@ -109,6 +110,8 @@ const menuMap = {
     { label: '支付管理', desc: '管理支付账单', icon: Money, type: '', route: '/admin/payment-manage' },
     { label: '二次培训', desc: '管理补考培训审核', icon: Edit, type: '', route: '/admin/retake-training' },
     { label: '体检管理', desc: '审核体检申请录入结果', icon: Document, type: '', route: '/admin/physical-exam-manage' },
+    { label: '车辆管理', desc: '管理教练车辆信息', icon: Van, type: '', route: '/admin/vehicles' },
+    { label: '排班审核', desc: '审核教练排班申请', icon: Calendar, type: '', route: '/admin/schedule-review' },
     { label: '增驾管理', desc: '审核增驾申请录入成绩', icon: Trophy, type: '', route: '/admin/license-upgrade-manage' },
   ],
 }
