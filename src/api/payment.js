@@ -9,6 +9,7 @@ export const BizType = {
   REGISTRATION_FEE: 'registration_fee',    // 报名费
   EXAM_FEE: 'exam_fee',                    // 考试费
   FAMILIARIZATION_FEE: 'familiarization_fee', // 合场费
+  TRAINING_FEE: 'training_fee',            // 二次培训费
   OTHER: 'other',                          // 其他
 }
 

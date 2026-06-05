@@ -78,6 +78,7 @@
             <el-option label="报名费" value="registration_fee" />
             <el-option label="考试费" value="exam_fee" />
             <el-option label="合场费" value="familiarization_fee" />
+            <el-option label="二次培训费" value="training_fee" />
             <el-option label="其他" value="other" />
           </el-select>
         </el-form-item>
@@ -156,26 +157,84 @@
     </el-card>
 
     <!-- 创建账单对话框 -->
-    <el-dialog v-model="createDialogVisible" title="创建账单" width="450px" destroy-on-close>
-      <el-form :model="createForm" :rules="createRules" ref="createFormRef" label-width="100px">
-        <el-form-item label="学员ID" prop="studentId">
-          <el-input-number v-model="createForm.studentId" :min="1" style="width: 100%" />
-        </el-form-item>
-        <el-form-item label="金额" prop="amount">
-          <el-input-number v-model="createForm.amount" :precision="2" :min="0" :max="999999" style="width: 100%" />
-        </el-form-item>
-        <el-form-item label="业务类型" prop="bizType">
-          <el-select v-model="createForm.bizType" placeholder="请选择" style="width: 100%">
-            <el-option label="其他" value="other" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="备注" prop="remark">
-          <el-input v-model="createForm.remark" type="textarea" :rows="2" placeholder="请输入备注" />
-        </el-form-item>
-      </el-form>
+    <el-dialog v-model="createDialogVisible" title="创建账单" width="550px" destroy-on-close>
+      <!-- 第一步：搜索并选择学员 -->
+      <template v-if="!createForm._selectedStudent">
+        <div class="search-student-section">
+          <h4 style="margin: 0 0 12px">选择学员</h4>
+          <el-form :model="studentSearchForm" inline>
+            <el-form-item label="学员姓名">
+              <el-input v-model="studentSearchForm.realName" placeholder="输入姓名搜索" clearable style="width: 160px" />
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="handleSearchStudent" :loading="studentSearchLoading">搜索</el-button>
+              <el-button @click="studentSearchForm.realName = ''; studentList = []">清空</el-button>
+            </el-form-item>
+          </el-form>
+
+          <el-table
+            v-if="studentList.length > 0"
+            :data="studentList"
+            border stripe
+            max-height="220"
+            highlight-current-row
+            @row-click="handleSelectStudent"
+          >
+            <el-table-column prop="realName" label="姓名" width="100" />
+            <el-table-column prop="username" label="账号" width="120" />
+            <el-table-column prop="phone" label="手机号" width="130" />
+            <el-table-column prop="licenseType" label="车型" width="80" align="center">
+              <template #default="{ row }">
+                <el-tag size="small">{{ row.licenseType || '-' }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="70" align="center">
+              <template #default="{ row }">
+                <el-button type="primary" size="small" @click="handleSelectStudent(row)">选择</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+
+          <el-empty v-if="studentList.length === 0 && studentSearched" description="未找到匹配的学员" style="margin-top: 10px" />
+        </div>
+      </template>
+
+      <!-- 第二步：已选择学员，填写账单 -->
+      <template v-else>
+        <div class="selected-student-info">
+          <el-alert :title="`已选择学员：${createForm._selectedStudent.realName || createForm._selectedStudent.username}`" type="success" show-icon :closable="false" style="margin-bottom: 16px">
+            <template #description>
+              账号：{{ createForm._selectedStudent.username }} | 手机号：{{ createForm._selectedStudent.phone || '-' }} | 车型：{{ createForm._selectedStudent.licenseType || '-' }}
+            </template>
+          </el-alert>
+          <el-button link type="primary" size="small" @click="clearSelectedStudent">重新选择</el-button>
+        </div>
+
+        <el-form :model="createForm" :rules="createRules" ref="createFormRef" label-width="100px" style="margin-top: 12px">
+          <el-form-item label="学员ID">
+            <span>{{ createForm.studentId }}</span>
+          </el-form-item>
+          <el-form-item label="金额" prop="amount">
+            <el-input-number v-model="createForm.amount" :precision="2" :min="0" :max="999999" style="width: 100%" />
+          </el-form-item>
+          <el-form-item label="业务类型" prop="bizType">
+            <el-select v-model="createForm.bizType" placeholder="请选择" style="width: 100%">
+              <el-option label="报名费" value="registration_fee" />
+              <el-option label="考试费" value="exam_fee" />
+              <el-option label="合场费" value="familiarization_fee" />
+              <el-option label="二次培训费" value="training_fee" />
+              <el-option label="其他" value="other" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="备注" prop="remark">
+            <el-input v-model="createForm.remark" type="textarea" :rows="2" placeholder="请输入备注" />
+          </el-form-item>
+        </el-form>
+      </template>
+
       <template #footer>
-        <el-button @click="createDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="confirmCreate" :loading="actionLoading">创建</el-button>
+        <el-button @click="handleCreateCancel">取消</el-button>
+        <el-button v-if="createForm._selectedStudent" type="primary" @click="confirmCreate" :loading="actionLoading">创建</el-button>
       </template>
     </el-dialog>
   </div>
@@ -185,6 +244,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Refresh } from '@element-plus/icons-vue'
+import { getStudentList } from '@/api/student'
 import {
   getMyPaymentRecords,
   createPaymentRecord,
@@ -214,12 +274,17 @@ const createForm = reactive({
   amount: null,
   bizType: 'other',
   remark: '',
+  _selectedStudent: null,  // 内部使用，非提交字段
 })
 
 const createRules = {
-  studentId: [{ required: true, message: '请输入学员ID', trigger: 'blur' }],
   amount: [{ required: true, message: '请输入金额', trigger: 'blur' }],
 }
+
+const studentSearchForm = reactive({ realName: '' })
+const studentList = ref([])
+const studentSearchLoading = ref(false)
+const studentSearched = ref(false)
 
 const outstandingCount = computed(() => outstandingList.value.length)
 
@@ -228,6 +293,7 @@ function getBizTypeTagType(bizType) {
     [BizType.REGISTRATION_FEE]: 'success',
     [BizType.EXAM_FEE]: 'warning',
     [BizType.FAMILIARIZATION_FEE]: 'primary',
+    [BizType.TRAINING_FEE]: 'warning',
     [BizType.OTHER]: 'info',
   }
   return map[bizType] || 'info'
@@ -238,6 +304,7 @@ function getBizTypeText(bizType) {
     [BizType.REGISTRATION_FEE]: '报名费',
     [BizType.EXAM_FEE]: '考试费',
     [BizType.FAMILIARIZATION_FEE]: '合场费',
+    [BizType.TRAINING_FEE]: '二次培训费',
     [BizType.OTHER]: '其他',
   }
   return map[bizType] || bizType || '未知'
@@ -294,10 +361,54 @@ function handleCreate() {
   createForm.amount = null
   createForm.bizType = 'other'
   createForm.remark = ''
+  createForm._selectedStudent = null
+  studentSearchForm.realName = ''
+  studentList.value = []
+  studentSearched.value = false
   createDialogVisible.value = true
 }
 
+async function handleSearchStudent() {
+  if (!studentSearchForm.realName.trim()) {
+    ElMessage.warning('请输入学员姓名')
+    return
+  }
+  studentSearchLoading.value = true
+  studentSearched.value = true
+  try {
+    const res = await getStudentList({ realName: studentSearchForm.realName.trim() })
+    studentList.value = Array.isArray(res) ? res : []
+  } catch (error) {
+    console.error('搜索学员失败:', error)
+    studentList.value = []
+  } finally {
+    studentSearchLoading.value = false
+  }
+}
+
+function handleSelectStudent(row) {
+  createForm.studentId = row.id || row.userId
+  createForm._selectedStudent = row
+}
+
+function clearSelectedStudent() {
+  createForm.studentId = null
+  createForm._selectedStudent = null
+  studentSearchForm.realName = ''
+  studentList.value = []
+  studentSearched.value = false
+}
+
+function handleCreateCancel() {
+  createDialogVisible.value = false
+  createForm._selectedStudent = null
+}
+
 async function confirmCreate() {
+  if (!createForm.studentId) {
+    ElMessage.warning('请先选择学员')
+    return
+  }
   const valid = await createFormRef.value.validate().catch(() => false)
   if (!valid) return
 
@@ -311,6 +422,7 @@ async function confirmCreate() {
     })
     ElMessage.success('创建成功')
     createDialogVisible.value = false
+    createForm._selectedStudent = null
     fetchList()
     fetchOutstanding()
   } catch (error) {
