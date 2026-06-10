@@ -12,14 +12,26 @@
 
       <!-- 搜索栏 -->
       <el-form :model="searchForm" inline class="search-form">
-        <el-form-item label="学员ID">
-          <el-input-number v-model="searchForm.studentId" placeholder="请输入学员ID" :min="1" clearable style="width: 150px" />
+        <el-form-item label="学员姓名">
+          <el-input v-model="searchForm.studentName" placeholder="姓名搜索" clearable style="width: 140px" @keyup.enter="handleSearch" />
         </el-form-item>
         <el-form-item label="车型">
-          <el-select v-model="searchForm.licenseType" placeholder="全部车型" clearable style="width: 120px">
+          <el-select v-model="searchForm.licenseType" placeholder="全部车型" clearable style="width: 120px" @change="handleSearch">
             <el-option label="N1" value="N1" />
             <el-option label="N2" value="N2" />
             <el-option label="N3" value="N3" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="科目">
+          <el-select v-model="searchForm.subject" placeholder="全部" clearable style="width: 100px" @change="handleSearch">
+            <el-option label="理论" :value="1" />
+            <el-option label="实操" :value="2" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="是否合格">
+          <el-select v-model="searchForm.passStatus" placeholder="全部" clearable style="width: 110px" @change="handleSearch">
+            <el-option label="合格" :value="1" />
+            <el-option label="不合格" :value="0" />
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -33,7 +45,7 @@
       <!-- 数据表格 -->
       <el-table :data="examList" v-loading="loading" border stripe>
         <el-table-column type="index" label="序号" width="60" align="center" />
-        <el-table-column prop="studentId" label="学员ID" width="80" />
+        <el-table-column prop="studentName" label="学员姓名" width="100" />
         <el-table-column prop="licenseType" label="车型" width="80" align="center">
           <template #default="{ row }">
             <el-tag>{{ row.licenseType }}</el-tag>
@@ -77,6 +89,13 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <!-- 分页 -->
+      <div class="pagination-wrapper" v-if="total > 0">
+        <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.size" :total="total" layout="total, sizes, prev, pager, next" :page-sizes="[10, 20, 50]" @size-change="handleSearch" @current-change="fetchExamList" />
+      </div>
+
+      <el-empty v-if="!loading && examList.length === 0" description="暂无记录" style="margin-top: 40px" />
     </el-card>
 
     <!-- 录入/修改成绩对话框 -->
@@ -127,13 +146,17 @@ import { getSpecialExamList, createSpecialExam, updateSpecialExam } from '@/api/
 
 // 搜索表单
 const searchForm = reactive({
-  studentId: undefined,
+  studentName: '',
   licenseType: '',
+  subject: undefined,
+  passStatus: undefined,
 })
 
 // 数据列表
 const examList = ref([])
 const loading = ref(false)
+const total = ref(0)
+const pagination = reactive({ page: 1, size: 10 })
 
 // 对话框
 const dialogVisible = ref(false)
@@ -167,12 +190,14 @@ const formRules = {
 async function fetchExamList() {
   loading.value = true
   try {
-    const params = {}
-    if (searchForm.licenseType) {
-      params.licenseType = searchForm.licenseType
-    }
+    const params = { page: pagination.page, size: pagination.size }
+    if (searchForm.studentName) params.studentName = searchForm.studentName
+    if (searchForm.licenseType) params.licenseType = searchForm.licenseType
+    if (searchForm.subject !== undefined && searchForm.subject !== '') params.subject = searchForm.subject
+    if (searchForm.passStatus !== undefined && searchForm.passStatus !== '') params.passStatus = searchForm.passStatus
     const res = await getSpecialExamList(params)
-    examList.value = res || []
+    examList.value = Array.isArray(res) ? res : res.records || []
+    total.value = res.total || examList.value.length
   } catch (error) {
     console.error('获取考试记录列表失败:', error)
   } finally {
@@ -182,14 +207,17 @@ async function fetchExamList() {
 
 // 搜索
 function handleSearch() {
+  pagination.page = 1
   fetchExamList()
 }
 
 // 重置
 function handleReset() {
-  searchForm.studentId = undefined
+  searchForm.studentName = ''
   searchForm.licenseType = ''
-  fetchExamList()
+  searchForm.subject = undefined
+  searchForm.passStatus = undefined
+  handleSearch()
 }
 
 // 新增
@@ -289,6 +317,12 @@ onMounted(() => {
   .text-danger {
     color: #f56c6c;
     font-weight: bold;
+  }
+
+  .pagination-wrapper {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 16px;
   }
 }
 </style>

@@ -24,9 +24,9 @@ export function cancelRetakeTraining(id) {
   return request.put(`/retake-trainings/${id}/cancel`)
 }
 
-// 学员查询自己的二次培训记录
-export function getStudentRetakeTrainings(studentId) {
-  return request.get(`/retake-trainings/student/${studentId}`)
+// 学员分页查询自己的二次培训记录
+export function getStudentRetakeTrainings(studentId, params) {
+  return request.get(`/retake-trainings/student/${studentId}`, { params })
 }
 
 // 教练查看名下学员二次培训记录

@@ -13,7 +13,7 @@
       <!-- 搜索栏 -->
       <el-form :model="searchForm" inline class="search-form">
         <el-form-item label="车型">
-          <el-select v-model="searchForm.licenseType" placeholder="全部车型" clearable style="width: 120px">
+          <el-select v-model="searchForm.licenseType" placeholder="全部车型" clearable style="width: 120px" @change="handleSearch">
             <el-option label="C1" value="C1" />
             <el-option label="C2" value="C2" />
             <el-option label="B1" value="B1" />
@@ -26,7 +26,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="考试模式">
-          <el-select v-model="searchForm.examMode" placeholder="全部模式" clearable style="width: 120px">
+          <el-select v-model="searchForm.examMode" placeholder="全部模式" clearable style="width: 120px" @change="handleSearch">
             <el-option label="小汽车" :value="1" />
             <el-option label="特种车辆" :value="2" />
           </el-select>
@@ -40,7 +40,7 @@
       </el-form>
 
       <!-- 数据表格 -->
-      <el-table :data="filteredList" v-loading="loading" border stripe>
+      <el-table :data="displayList" v-loading="loading" border stripe>
         <el-table-column type="index" label="序号" width="60" align="center" />
         <el-table-column prop="licenseType" label="车型" width="80" align="center">
           <template #default="{ row }">
@@ -82,6 +82,13 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <!-- 分页 -->
+      <div class="pagination-wrapper" v-if="total > 0">
+        <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.size" :total="total" layout="total, sizes, prev, pager, next" :page-sizes="[10, 20, 50]" @size-change="handleSearch" @current-change="fetchConfigList" />
+      </div>
+
+      <el-empty v-if="!loading && displayList.length === 0" description="暂无记录" style="margin-top: 40px" />
     </el-card>
 
     <!-- 新增/编辑对话框 -->
@@ -153,14 +160,13 @@ const searchForm = reactive({
 // 数据列表
 const configList = ref([])
 const loading = ref(false)
+const total = ref(0)
+const pagination = reactive({ page: 1, size: 10 })
 
-// 过滤后的列表
-const filteredList = computed(() => {
-  return configList.value.filter(item => {
-    if (searchForm.licenseType && item.licenseType !== searchForm.licenseType) return false
-    if (searchForm.examMode !== undefined && item.examMode !== searchForm.examMode) return false
-    return true
-  })
+// examMode 前端过滤（后端暂不支持 examMode 筛选）
+const displayList = computed(() => {
+  if (searchForm.examMode === undefined) return configList.value
+  return configList.value.filter(item => item.examMode === searchForm.examMode)
 })
 
 // 对话框
@@ -196,8 +202,11 @@ const formRules = {
 async function fetchConfigList() {
   loading.value = true
   try {
-    const res = await getLicenseConfigList()
-    configList.value = res || []
+    const params = { page: pagination.page, size: pagination.size }
+    if (searchForm.licenseType) params.licenseType = searchForm.licenseType
+    const res = await getLicenseConfigList(params)
+    configList.value = Array.isArray(res) ? res : res.records || []
+    total.value = res.total || configList.value.length
   } catch (error) {
     console.error('获取车型配置列表失败:', error)
   } finally {
@@ -207,13 +216,16 @@ async function fetchConfigList() {
 
 // 搜索
 function handleSearch() {
-  // 前端筛选
+  pagination.page = 1
+  fetchConfigList()
 }
 
 // 重置
 function handleReset() {
   searchForm.licenseType = ''
   searchForm.examMode = undefined
+  pagination.page = 1
+  fetchConfigList()
 }
 
 // 新增
@@ -306,6 +318,12 @@ onMounted(() => {
     padding: 20px;
     background-color: #f5f7fa;
     border-radius: 4px;
+  }
+
+  .pagination-wrapper {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 16px;
   }
 }
 </style>

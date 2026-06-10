@@ -5,9 +5,9 @@ import request from './request'
  * 基础路径：/fee-standards
  */
 
-// 查询所有费用标准
-export function getFeeStandardList() {
-  return request.get('/fee-standards')
+// 分页查询费用标准（支持 licenseType 筛选）
+export function getFeeStandardList(params) {
+  return request.get('/fee-standards', { params })
 }
 
 // 按车型查询费用标准

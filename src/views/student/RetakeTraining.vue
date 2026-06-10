@@ -50,7 +50,9 @@
       <template #header>
         <div class="card-header">
           <span>我的二次培训记录</span>
-          <el-button text type="primary" @click="fetchMyRecords" :icon="Refresh">刷新</el-button>
+          <div class="header-actions">
+            <el-button text type="primary" @click="fetchMyRecords(1)" :icon="Refresh">刷新</el-button>
+          </div>
         </div>
       </template>
 
@@ -108,6 +110,11 @@
         </el-table-column>
       </el-table>
 
+      <!-- 分页 -->
+      <div class="pagination-wrapper" v-if="recordTotal > 0">
+        <el-pagination v-model:current-page="recordPage" v-model:page-size="recordPageSize" :total="recordTotal" layout="total, prev, pager, next" :page-sizes="[10, 20]" @current-change="fetchMyRecords" />
+      </div>
+
       <el-empty v-if="!recordLoading && myRecords.length === 0" description="暂无培训记录" style="margin-top: 30px" />
     </el-card>
 
@@ -164,6 +171,9 @@ const failedLoading = ref(false)
 // 我的二次培训记录
 const myRecords = ref([])
 const recordLoading = ref(false)
+const recordTotal = ref(0)
+const recordPage = ref(1)
+const recordPageSize = ref(10)
 
 // 教练列表（用于申请时指定）
 const coachList = ref([])
@@ -192,11 +202,14 @@ async function fetchFailedExams() {
 }
 
 // 获取我的二次培训记录
-async function fetchMyRecords() {
+async function fetchMyRecords(page) {
+  if (page) recordPage.value = page
   recordLoading.value = true
   try {
-    const res = await getStudentRetakeTrainings(userStore.userId)
-    myRecords.value = Array.isArray(res) ? res : []
+    const params = { page: recordPage.value, size: recordPageSize.value }
+    const res = await getStudentRetakeTrainings(userStore.userId, params)
+    myRecords.value = Array.isArray(res) ? res : res.records || []
+    recordTotal.value = res.total || myRecords.value.length
   } catch (error) {
     console.error('获取培训记录失败:', error)
     myRecords.value = []
@@ -276,7 +289,7 @@ function formatDateTime(dateTime) {
 }
 
 onMounted(async () => {
-  await fetchMyRecords()
+  await fetchMyRecords(1)
   fetchFailedExams()
 })
 </script>
@@ -290,5 +303,16 @@ onMounted(async () => {
 
 .text-gray {
   color: #909399;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.pagination-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
 }
 </style>

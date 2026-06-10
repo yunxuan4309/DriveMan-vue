@@ -46,9 +46,9 @@ export function getMyFamiliarizations() {
 // 管理员端接口
 // ═══════════════════════════════════════════════════════
 
-// 合场记录列表
-export function getFamiliarizations() {
-  return request.get('/familiarizations')
+// 合场记录列表（分页，支持 status 筛选）
+export function getFamiliarizations(params) {
+  return request.get('/familiarizations', { params })
 }
 
 // 安排合场时间

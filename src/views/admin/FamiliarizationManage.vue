@@ -9,7 +9,7 @@
       <!-- 筛选栏 -->
       <el-form :model="searchForm" inline class="search-form">
         <el-form-item label="状态">
-          <el-select v-model="searchForm.status" placeholder="全部" clearable style="width: 120px" @change="fetchList">
+          <el-select v-model="searchForm.status" placeholder="全部" clearable style="width: 120px" @change="handleSearch">
             <el-option label="待支付" :value="0" />
             <el-option label="已支付" :value="1" />
             <el-option label="已完成" :value="2" />
@@ -98,6 +98,13 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <!-- 分页 -->
+      <div class="pagination-wrapper" v-if="total > 0">
+        <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.size" :total="total" layout="total, sizes, prev, pager, next" :page-sizes="[10, 20, 50]" @size-change="handleSearch" @current-change="fetchList" />
+      </div>
+
+      <el-empty v-if="!loading && recordList.length === 0" description="暂无记录" style="margin-top: 40px" />
     </el-card>
 
     <!-- 安排时间对话框 -->
@@ -131,7 +138,9 @@ import { getStudentList } from '@/api/student'
 
 const recordList = ref([])
 const loading = ref(false)
+const total = ref(0)
 const actionLoading = ref(false)
+const pagination = reactive({ page: 1, size: 10 })
 
 const searchForm = reactive({
   status: undefined,
@@ -161,11 +170,21 @@ function formatDateTime(dateTime) {
   })
 }
 
+function handleSearch() {
+  pagination.page = 1
+  fetchList()
+}
+
 async function fetchList() {
   loading.value = true
   try {
-    const res = await getFamiliarizations()
-    let list = Array.isArray(res) ? res : []
+    const params = { page: pagination.page, size: pagination.size }
+    if (searchForm.status !== undefined && searchForm.status !== null && searchForm.status !== '') {
+      params.status = searchForm.status
+    }
+    const res = await getFamiliarizations(params)
+    let list = Array.isArray(res) ? res : res.records || []
+    total.value = res.total || list.length
 
     // 补齐学员姓名（后端部分接口未返回 studentName）
     const needNames = list.some(r => !r.studentName)
@@ -178,11 +197,6 @@ async function fetchList() {
       list.forEach(r => {
         if (!r.studentName) r.studentName = studentMap[r.studentId] || ''
       })
-    }
-
-    // 前端筛选
-    if (searchForm.status !== undefined && searchForm.status !== null) {
-      list = list.filter(item => item.status === searchForm.status)
     }
 
     recordList.value = list
@@ -253,5 +267,10 @@ onMounted(fetchList)
   padding: 20px;
   background-color: #f5f7fa;
   border-radius: 4px;
+}
+.pagination-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
 }
 </style>

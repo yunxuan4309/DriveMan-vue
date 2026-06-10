@@ -14,9 +14,9 @@ export function getMyPhysicalExams() {
   return request.get('/physical-exams/my')
 }
 
-// 管理员查询所有体检申请
-export function getAllPhysicalExams() {
-  return request.get('/physical-exams')
+// 管理员分页查询所有体检申请（支持 studentName / status 筛选）
+export function getAllPhysicalExams(params) {
+  return request.get('/physical-exams', { params })
 }
 
 // 管理员审核体检申请

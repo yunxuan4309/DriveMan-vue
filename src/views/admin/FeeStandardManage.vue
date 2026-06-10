@@ -13,7 +13,7 @@
       <!-- 搜索栏 -->
       <el-form :model="searchForm" inline class="search-form">
         <el-form-item label="车型">
-          <el-select v-model="searchForm.licenseType" placeholder="全部车型" clearable style="width: 120px">
+          <el-select v-model="searchForm.licenseType" placeholder="全部车型" clearable style="width: 120px" @change="handleSearch">
             <el-option label="C1" value="C1" />
             <el-option label="C2" value="C2" />
             <el-option label="B1" value="B1" />
@@ -34,7 +34,7 @@
       </el-form>
 
       <!-- 数据表格 -->
-      <el-table :data="filteredList" v-loading="loading" border stripe>
+      <el-table :data="feeList" v-loading="loading" border stripe>
         <el-table-column type="index" label="序号" width="60" align="center" />
         <el-table-column prop="licenseType" label="车型" width="80" align="center">
           <template #default="{ row }">
@@ -64,6 +64,13 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <!-- 分页 -->
+      <div class="pagination-wrapper" v-if="total > 0">
+        <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.size" :total="total" layout="total, sizes, prev, pager, next" :page-sizes="[10, 20, 50]" @size-change="handleSearch" @current-change="fetchFeeList" />
+      </div>
+
+      <el-empty v-if="!loading && feeList.length === 0" description="暂无记录" style="margin-top: 40px" />
     </el-card>
 
     <!-- 新增/编辑对话框 -->
@@ -107,7 +114,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Search, Edit, Delete } from '@element-plus/icons-vue'
 import { getFeeStandardList, createFeeStandard, updateFeeStandard, deleteFeeStandard } from '@/api/feeStandard'
@@ -120,12 +127,8 @@ const searchForm = reactive({
 // 数据列表
 const feeList = ref([])
 const loading = ref(false)
-
-// 过滤后的列表
-const filteredList = computed(() => {
-  if (!searchForm.licenseType) return feeList.value
-  return feeList.value.filter(item => item.licenseType === searchForm.licenseType)
-})
+const total = ref(0)
+const pagination = reactive({ page: 1, size: 10 })
 
 // 对话框
 const dialogVisible = ref(false)
@@ -154,8 +157,11 @@ const formRules = {
 async function fetchFeeList() {
   loading.value = true
   try {
-    const res = await getFeeStandardList()
-    feeList.value = res || []
+    const params = { page: pagination.page, size: pagination.size }
+    if (searchForm.licenseType) params.licenseType = searchForm.licenseType
+    const res = await getFeeStandardList(params)
+    feeList.value = Array.isArray(res) ? res : res.records || []
+    total.value = res.total || feeList.value.length
   } catch (error) {
     console.error('获取费用标准列表失败:', error)
   } finally {
@@ -165,12 +171,15 @@ async function fetchFeeList() {
 
 // 搜索
 function handleSearch() {
-  // 前端筛选，无需重新请求
+  pagination.page = 1
+  fetchFeeList()
 }
 
 // 重置
 function handleReset() {
   searchForm.licenseType = ''
+  pagination.page = 1
+  fetchFeeList()
 }
 
 // 新增
@@ -265,6 +274,12 @@ onMounted(() => {
     font-size: 12px;
     color: #909399;
     margin-top: 5px;
+  }
+
+  .pagination-wrapper {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 16px;
   }
 }
 </style>

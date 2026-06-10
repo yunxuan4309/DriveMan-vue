@@ -53,6 +53,11 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <!-- 欠费分页 -->
+      <div class="pagination-wrapper" v-if="outstandingTotal > 0">
+        <el-pagination v-model:current-page="outstandingPage" v-model:page-size="outstandingSize" :total="outstandingTotal" layout="total, prev, pager, next" @current-change="fetchOutstanding" />
+      </div>
     </el-card>
 
     <!-- 全部支付记录 -->
@@ -74,7 +79,7 @@
       <!-- 筛选栏 -->
       <el-form :model="searchForm" inline class="search-form">
         <el-form-item label="业务类型">
-          <el-select v-model="searchForm.bizType" placeholder="全部" clearable style="width: 140px" @change="fetchList">
+          <el-select v-model="searchForm.bizType" placeholder="全部" clearable style="width: 140px" @change="handleSearch">
             <el-option label="报名费" value="registration_fee" />
             <el-option label="考试费" value="exam_fee" />
             <el-option label="合场费" value="familiarization_fee" />
@@ -83,7 +88,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="状态">
-          <el-select v-model="searchForm.status" placeholder="全部" clearable style="width: 120px" @change="fetchList">
+          <el-select v-model="searchForm.status" placeholder="全部" clearable style="width: 120px" @change="handleSearch">
             <el-option label="待支付" :value="0" />
             <el-option label="已支付" :value="1" />
             <el-option label="已退款" :value="2" />
@@ -154,6 +159,13 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <!-- 支付记录分页 -->
+      <div class="pagination-wrapper" v-if="recordTotal > 0">
+        <el-pagination v-model:current-page="recordPage" v-model:page-size="recordSize" :total="recordTotal" layout="total, sizes, prev, pager, next, jumper" :page-sizes="[10, 20, 50]" @size-change="handleSearch" @current-change="fetchList" />
+      </div>
+
+      <el-empty v-if="!loading && recordList.length === 0" description="暂无记录" style="margin-top: 40px" />
     </el-card>
 
     <!-- 创建账单对话框 -->
@@ -258,8 +270,15 @@ import {
 
 const outstandingList = ref([])
 const outstandingLoading = ref(false)
+const outstandingTotal = ref(0)
+const outstandingPage = ref(1)
+const outstandingSize = ref(10)
+
 const recordList = ref([])
 const loading = ref(false)
+const recordTotal = ref(0)
+const recordPage = ref(1)
+const recordSize = ref(10)
 const actionLoading = ref(false)
 
 const searchForm = reactive({
@@ -274,7 +293,7 @@ const createForm = reactive({
   amount: null,
   bizType: 'other',
   remark: '',
-  _selectedStudent: null,  // 内部使用，非提交字段
+  _selectedStudent: null,
 })
 
 const createRules = {
@@ -286,7 +305,7 @@ const studentList = ref([])
 const studentSearchLoading = ref(false)
 const studentSearched = ref(false)
 
-const outstandingCount = computed(() => outstandingList.value.length)
+const outstandingCount = computed(() => outstandingTotal.value)
 
 function getBizTypeTagType(bizType) {
   const map = {
@@ -331,8 +350,10 @@ function formatDateTime(dateTime) {
 async function fetchOutstanding() {
   outstandingLoading.value = true
   try {
-    const res = await getOutstandingPayments()
-    outstandingList.value = Array.isArray(res) ? res : []
+    const params = { page: outstandingPage.value, size: outstandingSize.value }
+    const res = await getOutstandingPayments(params)
+    outstandingList.value = Array.isArray(res) ? res : res.records || []
+    outstandingTotal.value = res.total || outstandingList.value.length
   } catch (error) {
     console.error('获取欠费清单失败:', error)
   } finally {
@@ -340,15 +361,21 @@ async function fetchOutstanding() {
   }
 }
 
+function handleSearch() {
+  recordPage.value = 1
+  fetchList()
+}
+
 async function fetchList() {
   loading.value = true
   try {
-    const params = {}
+    const params = { page: recordPage.value, size: recordSize.value }
     if (searchForm.bizType) params.bizType = searchForm.bizType
     if (searchForm.status !== undefined && searchForm.status !== null) params.status = searchForm.status
 
     const res = await getPaymentRecords(params)
-    recordList.value = Array.isArray(res) ? res : []
+    recordList.value = Array.isArray(res) ? res : res.records || []
+    recordTotal.value = res.total || recordList.value.length
   } catch (error) {
     console.error('获取支付记录失败:', error)
   } finally {
@@ -495,5 +522,11 @@ onMounted(() => {
 
 .text-gray {
   color: #909399;
+}
+
+.pagination-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
 }
 </style>

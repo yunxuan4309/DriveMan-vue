@@ -58,7 +58,7 @@ export function refundPayment(id) {
   return request.put(`/payment-records/${id}/refund`)
 }
 
-// 欠费清单
-export function getOutstandingPayments() {
-  return request.get('/payment-records/outstanding')
+// 欠费清单（分页）
+export function getOutstandingPayments(params) {
+  return request.get('/payment-records/outstanding', { params })
 }

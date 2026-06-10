@@ -8,11 +8,30 @@
         </div>
       </template>
 
+      <!-- 搜索栏 -->
+      <el-form :model="searchForm" inline class="search-form">
+        <el-form-item label="学员姓名">
+          <el-input v-model="searchForm.studentName" placeholder="姓名搜索" clearable style="width: 140px" @keyup.enter="handleSearch" />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="searchForm.status" placeholder="全部状态" clearable style="width: 120px" @change="handleSearch">
+            <el-option label="待审核" :value="0" />
+            <el-option label="审核通过" :value="1" />
+            <el-option label="审核不通过" :value="2" />
+            <el-option label="已完成" :value="3" />
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="handleSearch">查询</el-button>
+          <el-button @click="handleReset">重置</el-button>
+        </el-form-item>
+      </el-form>
+
       <el-table :data="recordList" v-loading="loading" border stripe>
         <el-table-column type="index" label="序号" width="60" align="center" />
-        <el-table-column label="学员 ID" width="80" align="center">
+        <el-table-column label="学员姓名" width="100" align="center">
           <template #default="{ row }">
-            {{ row.studentId || '-' }}
+            {{ row.studentName || '-' }}
           </template>
         </el-table-column>
         <el-table-column label="体检地点" min-width="160" show-overflow-tooltip>
@@ -67,6 +86,11 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <!-- 分页 -->
+      <div class="pagination-wrapper" v-if="total > 0">
+        <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.size" :total="total" layout="total, sizes, prev, pager, next" :page-sizes="[10, 20, 50]" @size-change="handleSearch" @current-change="fetchList" />
+      </div>
 
       <el-empty v-if="!loading && recordList.length === 0" description="暂无体检申请" style="margin-top: 40px" />
     </el-card>
@@ -148,7 +172,14 @@ const userStore = useUserStore()
 
 const recordList = ref([])
 const loading = ref(false)
+const total = ref(0)
+const pagination = reactive({ page: 1, size: 10 })
 const currentRow = ref(null)
+
+const searchForm = reactive({
+  studentName: '',
+  status: undefined,
+})
 
 // 审核
 const auditDialogVisible = ref(false)
@@ -161,17 +192,34 @@ const resultForm = reactive({ fileId: null, result: 1 })
 const resultLoading = ref(false)
 const resultFileName = ref('')
 
+function handleSearch() {
+  pagination.page = 1
+  fetchList()
+}
+
 async function fetchList() {
   loading.value = true
   try {
-    const res = await getAllPhysicalExams()
-    recordList.value = Array.isArray(res) ? res : []
+    const params = { page: pagination.page, size: pagination.size }
+    if (searchForm.studentName) params.studentName = searchForm.studentName
+    if (searchForm.status !== undefined && searchForm.status !== null && searchForm.status !== '') {
+      params.status = searchForm.status
+    }
+    const res = await getAllPhysicalExams(params)
+    recordList.value = Array.isArray(res) ? res : res.records || []
+    total.value = res.total || recordList.value.length
   } catch (error) {
     console.error('获取体检记录失败:', error)
     recordList.value = []
   } finally {
     loading.value = false
   }
+}
+
+function handleReset() {
+  searchForm.studentName = ''
+  searchForm.status = undefined
+  handleSearch()
 }
 
 function handleAudit(row) {
@@ -216,7 +264,6 @@ function handleResultFileChange(uploadFile) {
 }
 
 async function handleResultSubmit() {
-  // 先上传体检报告
   let fileId = null
   if (resultForm._file) {
     resultLoading.value = true
@@ -282,5 +329,18 @@ onMounted(fetchList)
 
 .text-gray {
   color: #909399;
+}
+
+.search-form {
+  margin-bottom: 20px;
+  padding: 20px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+}
+
+.pagination-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
 }
 </style>

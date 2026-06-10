@@ -10,6 +10,17 @@
 
       <!-- 筛选栏 -->
       <el-form :model="searchForm" inline class="search-form">
+        <el-form-item label="学员姓名">
+          <el-input v-model="searchForm.keyword" placeholder="姓名搜索" clearable style="width: 140px" @keyup.enter="fetchList" />
+        </el-form-item>
+        <el-form-item label="科目">
+          <el-select v-model="searchForm.subject" placeholder="全部科目" clearable style="width: 110px" @change="fetchList">
+            <el-option label="科目一" :value="1" />
+            <el-option label="科目二" :value="2" />
+            <el-option label="科目三" :value="3" />
+            <el-option label="科目四" :value="4" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="状态">
           <el-select v-model="searchForm.status" placeholder="全部" clearable style="width: 120px" @change="fetchList">
             <el-option label="待审核" :value="0" />
@@ -19,7 +30,7 @@
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="fetchList">查询</el-button>
+          <el-button type="primary" @click="handleSearch">查询</el-button>
           <el-button @click="handleReset">重置</el-button>
         </el-form-item>
       </el-form>
@@ -152,6 +163,8 @@ const currentRow = ref(null)
 const searchForm = reactive({
   page: 1,
   size: 10,
+  keyword: '',
+  subject: undefined,
   status: undefined,
 })
 
@@ -163,6 +176,8 @@ async function fetchList() {
   loading.value = true
   try {
     const params = { page: searchForm.page, size: searchForm.size }
+    if (searchForm.keyword) params.keyword = searchForm.keyword
+    if (searchForm.subject !== undefined && searchForm.subject !== '') params.subject = searchForm.subject
     if (searchForm.status !== undefined && searchForm.status !== '') {
       params.status = searchForm.status
     }
@@ -185,8 +200,15 @@ async function fetchList() {
   }
 }
 
+function handleSearch() {
+  searchForm.page = 1
+  fetchList()
+}
+
 function handleReset() {
   searchForm.page = 1
+  searchForm.keyword = ''
+  searchForm.subject = undefined
   searchForm.status = undefined
   fetchList()
 }

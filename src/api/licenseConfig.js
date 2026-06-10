@@ -5,9 +5,9 @@ import request from './request'
  * 基础路径：/license-configs
  */
 
-// 查询所有车型配置
-export function getLicenseConfigList() {
-  return request.get('/license-configs')
+// 分页查询车型配置（支持 licenseType 筛选）
+export function getLicenseConfigList(params) {
+  return request.get('/license-configs', { params })
 }
 
 // 按车型查询配置

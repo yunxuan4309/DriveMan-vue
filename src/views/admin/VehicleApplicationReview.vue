@@ -49,8 +49,18 @@
       <template #header>
         <div class="card-header">
           <span>全部申请记录</span>
-          <div class="header-right">
-            <el-select v-model="filterStatus" placeholder="全部状态" clearable style="width: 120px; margin-right: 10px" @change="handleFilterChange">
+          <div class="header-right" style="display: flex; gap: 8px">
+            <el-input v-model="searchKeyword" placeholder="教练姓名" clearable style="width: 130px" @keyup.enter="handleFilterChange" />
+            <el-select v-model="searchVehicleType" placeholder="申请车型" clearable style="width: 120px" @change="handleFilterChange">
+              <el-option label="C1" value="C1" />
+              <el-option label="C2" value="C2" />
+              <el-option label="B1" value="B1" />
+              <el-option label="B2" value="B2" />
+              <el-option label="A1" value="A1" />
+              <el-option label="A2" value="A2" />
+              <el-option label="A3" value="A3" />
+            </el-select>
+            <el-select v-model="filterStatus" placeholder="全部状态" clearable style="width: 120px" @change="handleFilterChange">
               <el-option label="待审核" :value="0" />
               <el-option label="已通过" :value="1" />
               <el-option label="已拒绝" :value="2" />
@@ -130,6 +140,8 @@ const historyLoading = ref(false)
 const pendingList = ref([])
 const historyList = ref([])
 const filterStatus = ref()
+const searchKeyword = ref('')
+const searchVehicleType = ref('')
 
 const pagination = reactive({
   page: 1,
@@ -174,6 +186,8 @@ async function fetchHistoryList() {
     if (filterStatus.value !== undefined && filterStatus.value !== null) {
       params.status = filterStatus.value
     }
+    if (searchKeyword.value) params.coachName = searchKeyword.value
+    if (searchVehicleType.value) params.vehicleType = searchVehicleType.value
     const res = await getAllVehicleApplications(params)
     if (res && res.records) {
       historyList.value = res.records
