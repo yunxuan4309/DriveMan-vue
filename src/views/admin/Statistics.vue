@@ -23,8 +23,23 @@
       <el-col :xs="24" :lg="12">
         <el-card>
           <template #header>
-            <span>近30天报名趋势</span>
-            <el-button text type="primary" @click="fetchRegistrationTrend" :icon="Refresh" :loading="loading.trend">刷新</el-button>
+            <div class="card-header-wrap">
+              <span>报名趋势</span>
+              <div class="header-actions">
+                <el-date-picker
+                  v-model="trendDateRange"
+                  type="daterange"
+                  range-separator="至"
+                  start-placeholder="开始日期"
+                  end-placeholder="结束日期"
+                  value-format="YYYY-MM-DD"
+                  style="width: 240px"
+                  @change="handleTrendDateChange"
+                />
+                <el-button text type="primary" @click="handleExport('trend')" :icon="Download" :loading="exporting.trend">导出</el-button>
+                <el-button text type="primary" @click="fetchRegistrationTrend" :icon="Refresh" :loading="loading.trend">刷新</el-button>
+              </div>
+            </div>
           </template>
           <div ref="registrationTrendRef" class="chart-container"></div>
         </el-card>
@@ -34,8 +49,22 @@
       <el-col :xs="24" :lg="12">
         <el-card>
           <template #header>
-            <span>各科目月度通过率趋势</span>
-            <el-button text type="primary" @click="fetchPassRate" :icon="Refresh" :loading="loading.passRate">刷新</el-button>
+            <div class="card-header-wrap">
+              <span>各科目月度通过率趋势</span>
+              <div class="header-actions">
+                <el-select v-model="passRateFilters.year" placeholder="全部年份" clearable style="width: 110px" @change="fetchPassRate">
+                  <el-option v-for="y in yearOptions" :key="y" :label="y + '年'" :value="y" />
+                </el-select>
+                <el-select v-model="passRateFilters.subject" placeholder="全部科目" clearable style="width: 110px" @change="fetchPassRate">
+                  <el-option label="科目一" :value="1" />
+                  <el-option label="科目二" :value="2" />
+                  <el-option label="科目三" :value="3" />
+                  <el-option label="科目四" :value="4" />
+                </el-select>
+                <el-button text type="primary" @click="handleExport('passRate')" :icon="Download" :loading="exporting.passRate">导出</el-button>
+                <el-button text type="primary" @click="fetchPassRate" :icon="Refresh" :loading="loading.passRate">刷新</el-button>
+              </div>
+            </div>
           </template>
           <div ref="passRateRef" class="chart-container"></div>
         </el-card>
@@ -47,8 +76,24 @@
       <el-col :xs="24" :lg="12">
         <el-card>
           <template #header>
-            <span>教练效能排名</span>
-            <el-button text type="primary" @click="fetchCoachWorkload" :icon="Refresh" :loading="loading.coach">刷新</el-button>
+            <div class="card-header-wrap">
+              <span>教练效能排名</span>
+              <div class="header-actions">
+                <el-select v-model="coachFilters.licenseType" placeholder="全部车型" clearable style="width: 110px" @change="fetchCoachWorkload">
+                  <el-option label="C1" value="C1" />
+                  <el-option label="C2" value="C2" />
+                  <el-option label="C3" value="C3" />
+                  <el-option label="B1" value="B1" />
+                  <el-option label="B2" value="B2" />
+                  <el-option label="A1" value="A1" />
+                  <el-option label="A2" value="A2" />
+                  <el-option label="A3" value="A3" />
+                </el-select>
+                <el-input-number v-model="coachFilters.topN" :min="1" :max="100" placeholder="Top" style="width: 100px" controls-position="right" @change="fetchCoachWorkload" />
+                <el-button text type="primary" @click="handleExport('coach')" :icon="Download" :loading="exporting.coach">导出</el-button>
+                <el-button text type="primary" @click="fetchCoachWorkload" :icon="Refresh" :loading="loading.coach">刷新</el-button>
+              </div>
+            </div>
           </template>
           <div ref="coachWorkloadRef" class="chart-container"></div>
           <!-- 教练明细表格 -->
@@ -78,8 +123,16 @@
       <el-col :xs="24" :lg="12">
         <el-card>
           <template #header>
-            <span>收入看板</span>
-            <el-button text type="primary" @click="fetchRevenueSummary" :icon="Refresh" :loading="loading.revenue">刷新</el-button>
+            <div class="card-header-wrap">
+              <span>收入看板</span>
+              <div class="header-actions">
+                <el-select v-model="revenueFilters.year" placeholder="全部年份" clearable style="width: 110px" @change="fetchRevenueSummary">
+                  <el-option v-for="y in yearOptions" :key="y" :label="y + '年'" :value="y" />
+                </el-select>
+                <el-button text type="primary" @click="handleExport('revenue')" :icon="Download" :loading="exporting.revenue">导出</el-button>
+                <el-button text type="primary" @click="fetchRevenueSummary" :icon="Refresh" :loading="loading.revenue">刷新</el-button>
+              </div>
+            </div>
           </template>
           <div ref="revenueChartRef" class="chart-container"></div>
           <div ref="bizTypeChartRef" class="chart-container-small"></div>
@@ -90,14 +143,19 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted } from 'vue'
-import { Refresh, Money, Check, Clock, Close } from '@element-plus/icons-vue'
+import { ref, reactive, onMounted, onUnmounted, computed } from 'vue'
+import { ElMessage } from 'element-plus'
+import { Refresh, Money, Check, Clock, Close, Download } from '@element-plus/icons-vue'
 import * as echarts from 'echarts'
 import {
   getRegistrationTrend,
   getPassRate,
   getCoachWorkload,
   getRevenueSummary,
+  exportRegistrationTrend,
+  exportPassRate,
+  exportCoachWorkload,
+  exportRevenueSummary,
 } from '@/api/statistics'
 
 // 图表 refs
@@ -120,6 +178,42 @@ const loading = reactive({
   passRate: false,
   coach: false,
   revenue: false,
+})
+const exporting = reactive({
+  trend: false,
+  passRate: false,
+  coach: false,
+  revenue: false,
+})
+
+// 年份选项
+const currentYear = new Date().getFullYear()
+const yearOptions = computed(() => {
+  const years = []
+  for (let y = currentYear; y >= 2023; y--) {
+    years.push(y)
+  }
+  return years
+})
+
+// 报名趋势日期范围
+const trendDateRange = ref(null)
+
+// 通过率筛选
+const passRateFilters = reactive({
+  year: undefined,
+  subject: undefined,
+})
+
+// 教练效能筛选
+const coachFilters = reactive({
+  licenseType: '',
+  topN: undefined,
+})
+
+// 收入看板筛选
+const revenueFilters = reactive({
+  year: undefined,
 })
 
 // 汇总数据
@@ -152,10 +246,23 @@ function setEmptyChart(chart, title = '暂无数据') {
   })
 }
 
+function getTrendParams() {
+  const params = {}
+  if (trendDateRange.value) {
+    params.startDate = trendDateRange.value[0]
+    params.endDate = trendDateRange.value[1]
+  }
+  return params
+}
+
+function handleTrendDateChange() {
+  fetchRegistrationTrend()
+}
+
 async function fetchRegistrationTrend() {
   loading.trend = true
   try {
-    const res = await getRegistrationTrend()
+    const res = await getRegistrationTrend(getTrendParams())
     if (res && res.xAxis && res.series) {
       registrationTrendChart.setOption(res)
     } else {
@@ -169,10 +276,17 @@ async function fetchRegistrationTrend() {
   }
 }
 
+function getPassRateParams() {
+  const params = {}
+  if (passRateFilters.year) params.year = passRateFilters.year
+  if (passRateFilters.subject) params.subject = passRateFilters.subject
+  return params
+}
+
 async function fetchPassRate() {
   loading.passRate = true
   try {
-    const res = await getPassRate()
+    const res = await getPassRate(getPassRateParams())
     if (res && res.xAxis && res.series) {
       passRateChart.setOption(res)
     } else {
@@ -186,10 +300,17 @@ async function fetchPassRate() {
   }
 }
 
+function getCoachParams() {
+  const params = {}
+  if (coachFilters.licenseType) params.licenseType = coachFilters.licenseType
+  if (coachFilters.topN) params.topN = coachFilters.topN
+  return params
+}
+
 async function fetchCoachWorkload() {
   loading.coach = true
   try {
-    const res = await getCoachWorkload()
+    const res = await getCoachWorkload(getCoachParams())
     if (res && res.xAxis && res.series) {
       coachWorkloadChart.setOption(res)
       coachDetailData.value = res.detailData || []
@@ -206,10 +327,16 @@ async function fetchCoachWorkload() {
   }
 }
 
+function getRevenueParams() {
+  const params = {}
+  if (revenueFilters.year) params.year = revenueFilters.year
+  return params
+}
+
 async function fetchRevenueSummary() {
   loading.revenue = true
   try {
-    const res = await getRevenueSummary()
+    const res = await getRevenueSummary(getRevenueParams())
     if (res) {
       // 更新汇总数据
       if (res.summary) {
@@ -239,6 +366,38 @@ async function fetchRevenueSummary() {
     setEmptyChart(bizTypeChart, '加载失败')
   } finally {
     loading.revenue = false
+  }
+}
+
+// ── Excel 导出 ──────────────────────────────────────────
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+const exportFns = {
+  trend: { fn: exportRegistrationTrend, paramsFn: getTrendParams, name: '报名趋势.xlsx' },
+  passRate: { fn: exportPassRate, paramsFn: getPassRateParams, name: '各科通过率.xlsx' },
+  coach: { fn: exportCoachWorkload, paramsFn: getCoachParams, name: '教练效能排名.xlsx' },
+  revenue: { fn: exportRevenueSummary, paramsFn: getRevenueParams, name: '收入看板.xlsx' },
+}
+
+async function handleExport(type) {
+  const { fn, paramsFn, name } = exportFns[type]
+  if (!fn) return
+  exporting[type] = true
+  try {
+    const res = await fn(paramsFn())
+    downloadBlob(res, name)
+    ElMessage.success('导出成功')
+  } catch (error) {
+    console.error('导出失败:', error)
+  } finally {
+    exporting[type] = false
   }
 }
 
@@ -316,5 +475,20 @@ onUnmounted(() => {
   height: 200px;
   width: 100%;
   margin-top: 16px;
+}
+
+.card-header-wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 </style>

@@ -73,6 +73,7 @@ const menuMap = {
     { label: '教练申请', desc: '选择并申请教练', icon: User, type: 'warning', route: '/student/coach-apply' },
     { label: '文件管理', desc: '上传与查看文件', icon: FolderOpened, type: 'info', route: '/student/files' },
     { label: '我的成绩', desc: '查看考试成绩', icon: Trophy, type: 'danger', route: '/student/scores' },
+    { label: '学习进度', desc: '查看学习进度和证书', icon: DataAnalysis, type: '', route: '/student/progress' },
     { label: '合场申请', desc: '申请考试合场', icon: Van, type: '', route: '/student/familiarization' },
     { label: '我的账单', desc: '查看支付记录', icon: Money, type: '', route: '/student/payments' },
     { label: '二次培训', desc: '挂科补考培训', icon: Edit, type: '', route: '/student/retake-training' },
@@ -112,6 +113,7 @@ const menuMap = {
     { label: '体检管理', desc: '审核体检申请录入结果', icon: Document, type: '', route: '/admin/physical-exam-manage' },
     { label: '车辆管理', desc: '管理教练车辆信息', icon: Van, type: '', route: '/admin/vehicles' },
     { label: '排班审核', desc: '审核教练排班申请', icon: Calendar, type: '', route: '/admin/schedule-review' },
+    { label: '系统配置', desc: '管理系统配置项', icon: Setting, type: '', route: '/admin/system-config' },
     { label: '增驾管理', desc: '审核增驾申请录入成绩', icon: Trophy, type: '', route: '/admin/license-upgrade-manage' },
   ],
 }

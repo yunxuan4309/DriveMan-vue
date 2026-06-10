@@ -22,6 +22,7 @@
           <el-menu-item index="/admin/license-upgrade-manage">增驾管理</el-menu-item>
           <el-menu-item index="/admin/vehicles">车辆管理</el-menu-item>
           <el-menu-item index="/admin/schedule-review">排班审核</el-menu-item>
+          <el-menu-item index="/admin/system-config">系统配置</el-menu-item>
           <el-sub-menu index="/admin/base-data">
             <template #title>基础数据管理</template>
             <el-menu-item index="/admin/fee-standards">费用标准管理</el-menu-item>

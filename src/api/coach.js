@@ -34,6 +34,11 @@ export function getPendingApplications() {
   return request.get('/coach-applications/pending')
 }
 
+// 分页查询教练申请（支持 status / keyword 筛选）
+export function getCoachApplications(params) {
+  return request.get('/coach-applications', { params })
+}
+
 // 查询学员的申请记录
 export function getStudentApplications(studentId) {
   return request.get(`/coach-applications/student/${studentId}`)
@@ -59,9 +64,9 @@ export function assignCoach(studentId, coachId) {
   })
 }
 
-// 查询所有绑定关系
-export function getCoachAssignments() {
-  return request.get('/coach-assignments')
+// 分页查询绑定关系（支持 studentName / coachName 搜索）
+export function getCoachAssignments(params) {
+  return request.get('/coach-assignments', { params })
 }
 
 // 解绑教练

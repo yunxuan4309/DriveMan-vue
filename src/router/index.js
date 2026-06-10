@@ -57,6 +57,12 @@ const routes = [
         meta: { title: '我的成绩', roles: [1] },
       },
       {
+        path: 'progress',
+        name: 'StudentProgress',
+        component: () => import('@/views/student/StudentProgress.vue'),
+        meta: { title: '学习进度', roles: [1] },
+      },
+      {
         path: 'familiarization',
         name: 'StudentFamiliarization',
         component: () => import('@/views/student/Familiarization.vue'),
@@ -278,6 +284,12 @@ const routes = [
         name: 'ScheduleReview',
         component: () => import('@/views/admin/ScheduleReview.vue'),
         meta: { title: '排班审核', roles: [3] },
+      },
+      {
+        path: 'system-config',
+        name: 'SystemConfig',
+        component: () => import('@/views/admin/SystemConfig.vue'),
+        meta: { title: '系统配置', roles: [3] },
       },
       {
         path: 'license-upgrade-manage',

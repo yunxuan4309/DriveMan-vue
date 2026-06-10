@@ -7,6 +7,9 @@
 
       <!-- 搜索栏 -->
       <el-form :model="searchForm" inline class="search-form">
+        <el-form-item label="学员姓名">
+          <el-input v-model="searchForm.keyword" placeholder="姓名模糊搜索" clearable style="width: 140px" @keyup.enter="handleSearch" />
+        </el-form-item>
         <el-form-item label="状态">
           <el-select v-model="searchForm.status" placeholder="全部状态" clearable style="width: 120px">
             <el-option label="待审核" :value="0" />
@@ -21,7 +24,7 @@
         </el-form-item>
       </el-form>
 
-      <el-table :data="filteredList" v-loading="loading" border stripe>
+      <el-table :data="regList" v-loading="loading" border stripe>
         <el-table-column type="index" label="序号" width="60" align="center" />
         <el-table-column prop="studentName" label="学员姓名" width="100" />
         <el-table-column label="科目" width="80" align="center">
@@ -150,7 +153,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Check, Close } from '@element-plus/icons-vue'
 import { getExamRegistrationList, auditExamRegistration, scoreExamRegistration } from '@/api/exam'
@@ -161,12 +164,8 @@ const pagination = reactive({ page: 1, size: 10, total: 0 })
 
 // 搜索
 const searchForm = reactive({
-  status: undefined,
-})
-
-const filteredList = computed(() => {
-  if (searchForm.status === undefined || searchForm.status === '') return regList.value
-  return regList.value.filter(item => item.status === searchForm.status)
+  status: 0,  // 默认只展示待审核
+  keyword: '',
 })
 
 // 审核
@@ -190,10 +189,10 @@ const scoreLoading = ref(false)
 async function fetchList() {
   loading.value = true
   try {
-    const res = await getExamRegistrationList({
-      page: pagination.page,
-      size: pagination.size,
-    })
+    const params = { page: pagination.page, size: pagination.size }
+    if (searchForm.status !== undefined && searchForm.status !== '') params.status = searchForm.status
+    if (searchForm.keyword) params.keyword = searchForm.keyword
+    const res = await getExamRegistrationList(params)
     regList.value = res.records || []
     pagination.total = res.total || 0
   } catch (error) {
@@ -205,11 +204,14 @@ async function fetchList() {
 
 function handleSearch() {
   pagination.page = 1
+  fetchList()
 }
 
 function handleReset() {
-  searchForm.status = undefined
+  searchForm.status = 0
+  searchForm.keyword = ''
   pagination.page = 1
+  fetchList()
 }
 
 function handleAudit(row, pass) {

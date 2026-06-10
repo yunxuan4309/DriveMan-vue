@@ -85,6 +85,21 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <!-- 分页 -->
+      <div class="pagination-container" v-if="total > 0">
+        <el-pagination
+          v-model:current-page="pagination.page"
+          v-model:page-size="pagination.size"
+          :total="total"
+          layout="total, sizes, prev, pager, next, jumper"
+          :page-sizes="[10, 20, 50]"
+          @size-change="fetchList"
+          @current-change="fetchList"
+        />
+      </div>
+
+      <el-empty v-if="!loading && fileList.length === 0" description="暂无记录" style="margin-top: 40px" />
     </el-card>
 
     <!-- 预览对话框 -->
@@ -112,6 +127,8 @@ const searchForm = reactive({
 
 const fileList = ref([])
 const loading = ref(false)
+const total = ref(0)
+const pagination = reactive({ page: 1, size: 10 })
 
 const previewDialogVisible = ref(false)
 const previewUrl = ref('')
@@ -161,30 +178,17 @@ function formatDateTime(dateTime) {
 }
 
 async function fetchList() {
-  // 至少需要一个查询条件
-  if (!searchForm.realName && !searchForm.role) {
-    ElMessage.warning('请输入真实姓名或选择用户角色')
-    return
-  }
-
   loading.value = true
   try {
-    const params = {}
+    const params = { page: pagination.page, size: pagination.size }
     if (searchForm.realName) params.realName = searchForm.realName
     if (searchForm.role) params.role = searchForm.role
+    if (searchForm.bizType) params.bizType = searchForm.bizType
+    if (searchForm.fileType) params.fileType = searchForm.fileType
 
     const res = await queryFiles(params)
-    let list = Array.isArray(res) ? res : []
-
-    // 前端过滤
-    if (searchForm.bizType) {
-      list = list.filter(f => f.bizType === searchForm.bizType)
-    }
-    if (searchForm.fileType) {
-      list = list.filter(f => f.fileType === searchForm.fileType)
-    }
-
-    fileList.value = list
+    fileList.value = Array.isArray(res) ? res : res.records || []
+    total.value = res.total || fileList.value.length
   } catch (error) {
     console.error('获取文件列表失败:', error)
   } finally {
@@ -193,6 +197,7 @@ async function fetchList() {
 }
 
 function handleSearch() {
+  pagination.page = 1
   fetchList()
 }
 
@@ -201,7 +206,8 @@ function handleReset() {
   searchForm.role = undefined
   searchForm.bizType = ''
   searchForm.fileType = ''
-  fileList.value = []
+  pagination.page = 1
+  fetchList()
 }
 
 async function handlePreview(row) {
@@ -243,9 +249,7 @@ async function handleDelete(row) {
   }
 }
 
-onMounted(() => {
-  // 初始加载时不自动查询，需要用户输入条件
-})
+onMounted(fetchList)
 </script>
 
 <style scoped lang="scss">

@@ -10,6 +10,20 @@
         </div>
       </template>
 
+      <!-- 搜索栏 -->
+      <el-form :model="searchForm" inline class="search-form">
+        <el-form-item label="学员姓名">
+          <el-input v-model="searchForm.studentName" placeholder="学员姓名搜索" clearable style="width: 140px" @keyup.enter="handleSearch" />
+        </el-form-item>
+        <el-form-item label="教练姓名">
+          <el-input v-model="searchForm.coachName" placeholder="教练姓名搜索" clearable style="width: 140px" @keyup.enter="handleSearch" />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="handleSearch">查询</el-button>
+          <el-button @click="handleReset">重置</el-button>
+        </el-form-item>
+      </el-form>
+
       <el-table :data="assignmentList" v-loading="loading" border stripe>
         <el-table-column type="index" label="序号" width="60" align="center" />
         <el-table-column prop="studentName" label="学员姓名" width="120" />
@@ -39,6 +53,13 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <!-- 分页 -->
+      <div class="pagination-wrapper" v-if="total > 0">
+        <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.size" :total="total" layout="total, sizes, prev, pager, next, jumper" :page-sizes="[10, 20, 50]" @size-change="fetchAssignments" @current-change="fetchAssignments" />
+      </div>
+
+      <el-empty v-if="!loading && assignmentList.length === 0" description="暂无记录" style="margin-top: 40px" />
     </el-card>
 
     <!-- 分配对话框 -->
@@ -74,7 +95,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import { getCoachAssignments, assignCoach, unbindCoach, getCoachList } from '@/api/coach'
@@ -82,6 +103,13 @@ import { getStudentList } from '@/api/student'
 
 const assignmentList = ref([])
 const loading = ref(false)
+const total = ref(0)
+const pagination = reactive({ page: 1, size: 10 })
+
+const searchForm = reactive({
+  studentName: '',
+  coachName: '',
+})
 
 const assignDialogVisible = ref(false)
 const assignFormRef = ref(null)
@@ -98,13 +126,29 @@ const coachList = ref([])
 async function fetchAssignments() {
   loading.value = true
   try {
-    const res = await getCoachAssignments()
-    assignmentList.value = Array.isArray(res) ? res : []
+    const params = { page: pagination.page, size: pagination.size }
+    if (searchForm.studentName) params.studentName = searchForm.studentName
+    if (searchForm.coachName) params.coachName = searchForm.coachName
+    const res = await getCoachAssignments(params)
+    assignmentList.value = Array.isArray(res) ? res : res.records || []
+    total.value = res.total || assignmentList.value.length
   } catch (error) {
     console.error('获取绑定关系失败:', error)
   } finally {
     loading.value = false
   }
+}
+
+function handleSearch() {
+  pagination.page = 1
+  fetchAssignments()
+}
+
+function handleReset() {
+  searchForm.studentName = ''
+  searchForm.coachName = ''
+  pagination.page = 1
+  fetchAssignments()
 }
 
 async function fetchStudents() {
@@ -177,6 +221,17 @@ onMounted(fetchAssignments)
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+.search-form {
+  margin-bottom: 20px;
+  padding: 20px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+}
+.pagination-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
 }
 .text-gray { color: #909399; }
 </style>

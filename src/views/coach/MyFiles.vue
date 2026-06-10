@@ -69,6 +69,19 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <!-- 分页 -->
+      <div class="pagination-container">
+        <el-pagination
+          v-model:current-page="pagination.page"
+          v-model:page-size="pagination.size"
+          :total="pagination.total"
+          layout="total, sizes, prev, pager, next, jumper"
+          :page-sizes="[5, 10, 20]"
+          @size-change="fetchFiles"
+          @current-change="fetchFiles"
+        />
+      </div>
     </el-card>
 
     <!-- 上传文件对话框 -->
@@ -130,6 +143,7 @@ const userStore = useUserStore()
 
 const fileList = ref([])
 const loading = ref(false)
+const pagination = reactive({ page: 1, size: 10, total: 0 })
 
 const searchForm = reactive({
   bizType: '',
@@ -191,13 +205,17 @@ function formatDateTime(dateTime) {
 async function fetchFiles() {
   loading.value = true
   try {
-    const params = {}
+    const params = {
+      page: pagination.page,
+      size: pagination.size,
+    }
     if (searchForm.bizType) params.bizType = searchForm.bizType
     if (searchForm.fileType) params.fileType = searchForm.fileType
     if (searchForm.keyword) params.keyword = searchForm.keyword
 
     const res = await getMyFiles(params)
-    fileList.value = Array.isArray(res) ? res : []
+    fileList.value = Array.isArray(res) ? res : res.records || []
+    pagination.total = res.total || fileList.value.length
   } catch (error) {
     console.error('获取文件列表失败:', error)
   } finally {
@@ -206,6 +224,7 @@ async function fetchFiles() {
 }
 
 function handleSearch() {
+  pagination.page = 1
   fetchFiles()
 }
 
@@ -213,7 +232,7 @@ function handleReset() {
   searchForm.bizType = ''
   searchForm.fileType = ''
   searchForm.keyword = ''
-  fetchFiles()
+  handleSearch()
 }
 
 function onFileChange(uploadFile) {
@@ -295,6 +314,12 @@ onMounted(fetchFiles)
   padding: 20px;
   background-color: #f5f7fa;
   border-radius: 4px;
+}
+
+.pagination-container {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .upload-tip {
