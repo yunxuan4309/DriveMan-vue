@@ -56,6 +56,9 @@ request.interceptors.response.use(
         case 404:
           ElMessage.error(msg || '请求的资源不存在')
           break
+        case 409:
+          ElMessage.error(msg || '资源冲突，请检查时间段是否已被占用')
+          break
         case 500:
           ElMessage.error(msg || '服务器错误')
           break

@@ -22,13 +22,10 @@ export const FamiliarizationStatus = {
 // 学员端接口
 // ═══════════════════════════════════════════════════════
 
-// 申请合场
+// 申请合场（参数为 Query）
 export function applyFamiliarization(examSessionId, carType) {
-  const params = new URLSearchParams()
-  params.append('examSessionId', examSessionId)
-  params.append('carType', carType)
-  return request.post('/familiarizations/apply', params, {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  return request.post('/familiarizations/apply', null, {
+    params: { examSessionId, carType },
   })
 }
 
@@ -37,9 +34,9 @@ export function payFamiliarization(id) {
   return request.put(`/familiarizations/${id}/pay`)
 }
 
-// 获取我的合场记录
-export function getMyFamiliarizations() {
-  return request.get('/familiarizations/my')
+// 获取我的合场记录（分页）
+export function getMyFamiliarizations(params) {
+  return request.get('/familiarizations/my', { params })
 }
 
 // ═══════════════════════════════════════════════════════
@@ -53,7 +50,9 @@ export function getFamiliarizations(params) {
 
 // 安排合场时间
 export function scheduleFamiliarization(id, scheduledTime) {
-  return request.put(`/familiarizations/${id}/schedule?scheduledTime=${encodeURIComponent(scheduledTime)}`)
+  return request.put(`/familiarizations/${id}/schedule`, null, {
+    params: { scheduledTime },
+  })
 }
 
 // 标记合场完成

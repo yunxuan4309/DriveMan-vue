@@ -9,10 +9,36 @@
       <!-- 筛选考试场次 -->
       <el-form :model="searchForm" inline class="search-form">
         <el-form-item label="科目">
-          <el-select v-model="searchForm.subject" placeholder="全部科目" clearable style="width: 120px" @change="fetchSessions">
+          <el-select v-model="searchForm.subject" placeholder="请选择科目" clearable style="width: 140px">
             <el-option label="科目二" :value="2" />
             <el-option label="科目三" :value="3" />
           </el-select>
+        </el-form-item>
+        <el-form-item label="车型">
+          <el-select v-model="searchForm.licenseType" placeholder="全部车型" clearable style="width: 120px">
+            <el-option label="C1" value="C1" />
+            <el-option label="C2" value="C2" />
+            <el-option label="B1" value="B1" />
+            <el-option label="C5" value="C5" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="日期范围">
+          <el-date-picker
+            v-model="sessionDateRange"
+            type="daterange"
+            value-format="YYYY-MM-DD"
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            style="width: 240px"
+          />
+        </el-form-item>
+        <el-form-item label="地点">
+          <el-input v-model="searchForm.location" placeholder="考试地点" clearable style="width: 160px" @keyup.enter="searchSessions" />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="searchSessions">查询</el-button>
+          <el-button @click="resetSearch">重置</el-button>
         </el-form-item>
       </el-form>
 
@@ -66,6 +92,19 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <!-- 考试场次分页 -->
+      <div class="pagination-wrapper" v-if="sessionTotal > 0">
+        <el-pagination
+          v-model:current-page="sessionPage"
+          v-model:page-size="sessionPageSize"
+          :total="sessionTotal"
+          layout="total, sizes, prev, pager, next"
+          :page-sizes="[10, 20, 50]"
+          @size-change="sessionPage = 1; fetchSessions()"
+          @current-change="fetchSessions"
+        />
+      </div>
     </el-card>
 
     <!-- 我的合场记录 -->
@@ -91,17 +130,17 @@
         </el-table-column>
         <el-table-column label="考试日期" width="120" align="center">
           <template #default="{ row }">
-            {{ row.examDate || '-' }}
+            {{ row.exam_date || '-' }}
           </template>
         </el-table-column>
         <el-table-column label="考试地点" min-width="120" show-overflow-tooltip>
           <template #default="{ row }">
-            {{ row.venueName || '-' }}
+            {{ row.venue_name || '-' }}
           </template>
         </el-table-column>
         <el-table-column label="教练" width="100" align="center">
           <template #default="{ row }">
-            {{ row.coachName || '-' }}
+            {{ row.coach_name || '-' }}
           </template>
         </el-table-column>
         <el-table-column label="安排时间" width="160" align="center">
@@ -135,6 +174,13 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <!-- 分页 -->
+      <div class="pagination-wrapper" v-if="recordTotal > 0">
+        <el-pagination v-model:current-page="recordPage" v-model:page-size="recordPageSize" :total="recordTotal" layout="total, sizes, prev, pager, next" :page-sizes="[10, 20, 50]" @size-change="recordPage = 1; fetchMyRecords()" @current-change="fetchMyRecords" />
+      </div>
+
+      <el-empty v-if="!recordLoading && recordList.length === 0" description="暂无合场记录" style="margin-top: 30px" />
     </el-card>
   </div>
 </template>
@@ -148,11 +194,21 @@ import { applyFamiliarization, payFamiliarization, getMyFamiliarizations, CarTyp
 
 const sessionList = ref([])
 const sessionLoading = ref(false)
+const sessionTotal = ref(0)
+const sessionPage = ref(1)
+const sessionPageSize = ref(10)
+const sessionDateRange = ref(null)
+
 const recordList = ref([])
 const recordLoading = ref(false)
+const recordTotal = ref(0)
+const recordPage = ref(1)
+const recordPageSize = ref(10)
 
 const searchForm = reactive({
-  subject: undefined,
+  subject: 2,
+  licenseType: undefined,
+  location: '',
 })
 
 // 预估价格（实际价格由后端 fee_standard 计算）
@@ -183,13 +239,27 @@ function formatDateTime(dateTime) {
   })
 }
 
+function buildSessionParams() {
+  const params = {
+    page: sessionPage.value,
+    size: sessionPageSize.value,
+  }
+  if (searchForm.subject) params.subject = searchForm.subject
+  if (searchForm.licenseType) params.licenseType = searchForm.licenseType
+  if (searchForm.location) params.location = searchForm.location
+  if (sessionDateRange.value) {
+    params.examDateStart = sessionDateRange.value[0]
+    params.examDateEnd = sessionDateRange.value[1]
+  }
+  return params
+}
+
 async function fetchSessions() {
   sessionLoading.value = true
   try {
-    const params = {}
-    if (searchForm.subject) params.subject = searchForm.subject
-    const res = await getExamSessionList(params)
-    sessionList.value = Array.isArray(res) ? res : res.records || []
+    const res = await getExamSessionList(buildSessionParams())
+    sessionList.value = res.records || []
+    sessionTotal.value = res.total || 0
   } catch (error) {
     console.error('获取考试场次失败:', error)
   } finally {
@@ -197,11 +267,27 @@ async function fetchSessions() {
   }
 }
 
+function searchSessions() {
+  sessionPage.value = 1
+  fetchSessions()
+}
+
+function resetSearch() {
+  searchForm.subject = 2
+  searchForm.licenseType = undefined
+  searchForm.location = ''
+  sessionDateRange.value = null
+  sessionPage.value = 1
+  fetchSessions()
+}
+
 async function fetchMyRecords() {
   recordLoading.value = true
   try {
-    const res = await getMyFamiliarizations()
-    recordList.value = Array.isArray(res) ? res : []
+    const params = { page: recordPage.value, size: recordPageSize.value }
+    const res = await getMyFamiliarizations(params)
+    recordList.value = Array.isArray(res) ? res : res.records || []
+    recordTotal.value = res.total || recordList.value.length
   } catch (error) {
     console.error('获取合场记录失败:', error)
   } finally {
@@ -263,5 +349,11 @@ onMounted(() => {
 
 .text-gray {
   color: #909399;
+}
+
+.pagination-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
 }
 </style>

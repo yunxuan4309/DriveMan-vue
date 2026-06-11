@@ -22,7 +22,7 @@
         <el-table-column type="index" label="序号" width="60" align="center" />
         <el-table-column label="学员姓名" width="100" align="center">
           <template #default="{ row }">
-            {{ row.studentName || row.studentId || '-' }}
+            {{ row.student_name || row.studentId || '-' }}
           </template>
         </el-table-column>
         <el-table-column label="科目" width="80" align="center">
@@ -39,17 +39,17 @@
         </el-table-column>
         <el-table-column label="考试日期" width="120" align="center">
           <template #default="{ row }">
-            {{ row.examDate || '-' }}
+            {{ row.exam_date || '-' }}
           </template>
         </el-table-column>
         <el-table-column label="考试地点" min-width="120" show-overflow-tooltip>
           <template #default="{ row }">
-            {{ row.venueName || '-' }}
+            {{ row.venue_name || '-' }}
           </template>
         </el-table-column>
         <el-table-column label="教练" width="100" align="center">
           <template #default="{ row }">
-            {{ row.coachName || '-' }}
+            {{ row.coach_name || '-' }}
           </template>
         </el-table-column>
         <el-table-column label="安排时间" width="160" align="center">
@@ -186,8 +186,8 @@ async function fetchList() {
     let list = Array.isArray(res) ? res : res.records || []
     total.value = res.total || list.length
 
-    // 补齐学员姓名（后端部分接口未返回 studentName）
-    const needNames = list.some(r => !r.studentName)
+    // 补齐学员姓名（兜底方案：接口已返回 student_name 时跳过）
+    const needNames = list.some(r => !r.student_name)
     if (needNames && list.length > 0) {
       const studentRes = await getStudentList({ page: 1, size: 9999 }).catch(() => null)
       const studentMap = {}
@@ -195,7 +195,7 @@ async function fetchList() {
         studentRes.records.forEach(s => { studentMap[s.id] = s.realName || s.username })
       }
       list.forEach(r => {
-        if (!r.studentName) r.studentName = studentMap[r.studentId] || ''
+        if (!r.student_name) r.student_name = studentMap[r.studentId] || ''
       })
     }
 
