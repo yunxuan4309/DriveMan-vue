@@ -18,12 +18,35 @@
         <el-form-item label="真实姓名">
           <el-input v-model="searchForm.realName" placeholder="请输入真实姓名" clearable />
         </el-form-item>
-        <el-form-item label="状态">
+        <el-form-item label="手机号">
+          <el-input v-model="searchForm.phone" placeholder="请输入手机号" clearable />
+        </el-form-item>
+        <el-form-item label="身份证号">
+          <el-input v-model="searchForm.idCard" placeholder="请输入身份证号" clearable />
+        </el-form-item>
+        <el-form-item label="驾照类型">
+          <el-select v-model="searchForm.licenseType" placeholder="全部车型" clearable style="width: 120px">
+            <el-option label="C1" value="C1" />
+            <el-option label="C2" value="C2" />
+            <el-option label="B1" value="B1" />
+            <el-option label="C5" value="C5" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="结业状态">
+          <el-select v-model="searchForm.allPassed" placeholder="全部" clearable style="width: 120px">
+            <el-option label="已结业" :value="true" />
+            <el-option label="在学中" :value="false" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="报名状态">
           <el-select v-model="searchForm.status" placeholder="全部状态" clearable style="width: 120px">
             <el-option label="待审核" :value="0" />
-            <el-option label="已通过" :value="1" />
+            <el-option label="已报名" :value="1" />
             <el-option label="未通过" :value="2" />
           </el-select>
+        </el-form-item>
+        <el-form-item label="地址">
+          <el-input v-model="searchForm.address" placeholder="请输入地址" clearable />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch">
@@ -44,6 +67,12 @@
           <template #default="{ row }">
             <span v-if="row.licenseType">{{ row.licenseType }}</span>
             <span v-else class="text-gray">-</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="结业状态" width="100" align="center">
+          <template #default="{ row }">
+            <el-tag v-if="row.allPassed" type="success" size="small">已结业</el-tag>
+            <el-tag v-else type="info" size="small">在学中</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="status" label="状态" width="100" align="center">
@@ -199,7 +228,12 @@ import { getStudentList, createStudent, updateStudent, deleteStudent, auditRegis
 const searchForm = reactive({
   username: '',
   realName: '',
+  phone: '',
+  idCard: '',
+  licenseType: undefined,
+  allPassed: undefined,
   status: undefined,
+  address: '',
 })
 
 // 分页
@@ -289,7 +323,12 @@ function handleSearch() {
 function handleReset() {
   searchForm.username = ''
   searchForm.realName = ''
+  searchForm.phone = ''
+  searchForm.idCard = ''
+  searchForm.licenseType = undefined
+  searchForm.allPassed = undefined
   searchForm.status = undefined
+  searchForm.address = ''
   pagination.page = 1
   fetchStudentList()
 }
@@ -414,7 +453,7 @@ function resetForm() {
 
 // 工具函数
 function getStatusLabel(status) {
-  const map = { 0: '待审核', 1: '已通过', 2: '未通过' }
+  const map = { 0: '待审核', 1: '已报名', 2: '未通过' }
   return map[status] || '未知'
 }
 

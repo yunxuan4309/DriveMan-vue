@@ -31,7 +31,8 @@ export function deleteStudent(studentId) {
 }
 
 // 查询学员报名列表（支持状态筛选）
-// status: 0-待审核，1-已通过，2-未通过，不传则返回所有
+// 查询学员报名列表（支持状态筛选）
+// status: 0-待审核，1-已报名，2-未通过，不传则返回所有
 export function getRegistrationList(params) {
   return request.get('/registrations', { params })
 }
