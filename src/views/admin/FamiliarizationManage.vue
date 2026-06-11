@@ -8,13 +8,49 @@
 
       <!-- 筛选栏 -->
       <el-form :model="searchForm" inline class="search-form">
+        <el-form-item label="关键字">
+          <el-input v-model="searchForm.keyword" placeholder="学员姓名/考试地点" clearable style="width: 160px" @keyup.enter="handleSearch" />
+        </el-form-item>
+        <el-form-item label="科目">
+          <el-select v-model="searchForm.subject" placeholder="全部" clearable style="width: 90px" @change="handleSearch">
+            <el-option label="科目二" :value="2" />
+            <el-option label="科目三" :value="3" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="用车类型">
+          <el-select v-model="searchForm.carType" placeholder="全部" clearable style="width: 110px" @change="handleSearch">
+            <el-option label="教练车" :value="1" />
+            <el-option label="考试车" :value="2" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="状态">
-          <el-select v-model="searchForm.status" placeholder="全部" clearable style="width: 120px" @change="handleSearch">
+          <el-select v-model="searchForm.status" placeholder="全部" clearable style="width: 100px" @change="handleSearch">
             <el-option label="待支付" :value="0" />
             <el-option label="已支付" :value="1" />
             <el-option label="已完成" :value="2" />
             <el-option label="已取消" :value="3" />
           </el-select>
+        </el-form-item>
+        <el-form-item label="考试日期">
+          <el-date-picker
+            v-model="examDateRange"
+            type="daterange"
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            value-format="YYYY-MM-DD"
+            style="width: 230px"
+            @change="handleSearch"
+          />
+        </el-form-item>
+        <el-form-item label="教练">
+          <el-input v-model="searchForm.coachName" placeholder="教练姓名" clearable style="width: 130px" @keyup.enter="handleSearch" />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="handleSearch">
+            <el-icon><Search /></el-icon>查询
+          </el-button>
+          <el-button @click="handleReset">重置</el-button>
         </el-form-item>
       </el-form>
 
@@ -22,7 +58,7 @@
         <el-table-column type="index" label="序号" width="60" align="center" />
         <el-table-column label="学员姓名" width="100" align="center">
           <template #default="{ row }">
-            {{ row.student_name || row.studentId || '-' }}
+            {{ row.student_name || row.student_id || '-' }}
           </template>
         </el-table-column>
         <el-table-column label="科目" width="80" align="center">
@@ -32,8 +68,8 @@
         </el-table-column>
         <el-table-column label="用车类型" width="100" align="center">
           <template #default="{ row }">
-            <el-tag size="small" :type="row.carType === 1 ? '' : 'warning'">
-              {{ row.carType === 1 ? '教练车' : '考试车' }}
+            <el-tag size="small" :type="row.car_type === 1 ? '' : 'warning'">
+              {{ row.car_type === 1 ? '教练车' : '考试车' }}
             </el-tag>
           </template>
         </el-table-column>
@@ -54,7 +90,7 @@
         </el-table-column>
         <el-table-column label="安排时间" width="160" align="center">
           <template #default="{ row }">
-            {{ row.scheduledTime ? formatDateTime(row.scheduledTime) : '-' }}
+            {{ row.scheduled_time ? formatDateTime(row.scheduled_time) : '-' }}
           </template>
         </el-table-column>
         <el-table-column label="金额" width="90" align="center">
@@ -132,9 +168,8 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Refresh } from '@element-plus/icons-vue'
+import { Refresh, Search } from '@element-plus/icons-vue'
 import { getFamiliarizations, scheduleFamiliarization, completeFamiliarization, cancelFamiliarization } from '@/api/familiarization'
-import { getStudentList } from '@/api/student'
 
 const recordList = ref([])
 const loading = ref(false)
@@ -144,7 +179,12 @@ const pagination = reactive({ page: 1, size: 10 })
 
 const searchForm = reactive({
   status: undefined,
+  keyword: '',
+  subject: undefined,
+  carType: undefined,
+  coachName: '',
 })
+const examDateRange = ref([])
 
 const scheduleDialogVisible = ref(false)
 const currentRecord = ref(null)
@@ -175,6 +215,16 @@ function handleSearch() {
   fetchList()
 }
 
+function handleReset() {
+  searchForm.status = undefined
+  searchForm.keyword = ''
+  searchForm.subject = undefined
+  searchForm.carType = undefined
+  searchForm.coachName = ''
+  examDateRange.value = []
+  handleSearch()
+}
+
 async function fetchList() {
   loading.value = true
   try {
@@ -182,23 +232,22 @@ async function fetchList() {
     if (searchForm.status !== undefined && searchForm.status !== null && searchForm.status !== '') {
       params.status = searchForm.status
     }
+    if (searchForm.keyword) params.keyword = searchForm.keyword
+    if (searchForm.subject !== undefined && searchForm.subject !== null && searchForm.subject !== '') {
+      params.subject = searchForm.subject
+    }
+    if (searchForm.carType !== undefined && searchForm.carType !== null && searchForm.carType !== '') {
+      params.carType = searchForm.carType
+    }
+    if (examDateRange.value && examDateRange.value.length === 2) {
+      params.examDateStart = examDateRange.value[0]
+      params.examDateEnd = examDateRange.value[1]
+    }
+    if (searchForm.coachName) params.coachName = searchForm.coachName
+
     const res = await getFamiliarizations(params)
     let list = Array.isArray(res) ? res : res.records || []
     total.value = res.total || list.length
-
-    // 补齐学员姓名（兜底方案：接口已返回 student_name 时跳过）
-    const needNames = list.some(r => !r.student_name)
-    if (needNames && list.length > 0) {
-      const studentRes = await getStudentList({ page: 1, size: 9999 }).catch(() => null)
-      const studentMap = {}
-      if (studentRes?.records) {
-        studentRes.records.forEach(s => { studentMap[s.id] = s.realName || s.username })
-      }
-      list.forEach(r => {
-        if (!r.student_name) r.student_name = studentMap[r.studentId] || ''
-      })
-    }
-
     recordList.value = list
   } catch (error) {
     console.error('获取合场记录失败:', error)
