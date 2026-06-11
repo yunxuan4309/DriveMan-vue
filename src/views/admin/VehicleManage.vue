@@ -12,8 +12,14 @@
 
       <!-- 筛选栏 -->
       <el-form :model="searchForm" inline class="search-form">
+        <el-form-item label="车牌号">
+          <el-input v-model="searchForm.plateNumber" placeholder="车牌号" clearable style="width: 130px" @keyup.enter="fetchList" />
+        </el-form-item>
+        <el-form-item label="品牌">
+          <el-input v-model="searchForm.brand" placeholder="品牌" clearable style="width: 120px" @keyup.enter="fetchList" />
+        </el-form-item>
         <el-form-item label="车型">
-          <el-select v-model="searchForm.vehicleType" placeholder="全部" clearable style="width: 120px" @change="fetchList">
+          <el-select v-model="searchForm.vehicleType" placeholder="全部" clearable style="width: 100px" @change="fetchList">
             <el-option label="C1" value="C1" />
             <el-option label="C2" value="C2" />
             <el-option label="B1" value="B1" />
@@ -22,8 +28,14 @@
             <el-option label="N3" value="N3" />
           </el-select>
         </el-form-item>
+        <el-form-item label="型号">
+          <el-input v-model="searchForm.model" placeholder="型号" clearable style="width: 120px" @keyup.enter="fetchList" />
+        </el-form-item>
+        <el-form-item label="座位数">
+          <el-input-number v-model="searchForm.seats" :min="0" :max="50" :step="1" controls-position="right" style="width: 120px" placeholder="不限" @change="fetchList" />
+        </el-form-item>
         <el-form-item label="状态">
-          <el-select v-model="searchForm.status" placeholder="全部" clearable style="width: 120px" @change="fetchList">
+          <el-select v-model="searchForm.status" placeholder="全部" clearable style="width: 100px" @change="fetchList">
             <el-option label="空闲" :value="1" />
             <el-option label="使用中" :value="2" />
             <el-option label="维修" :value="3" />
@@ -31,6 +43,9 @@
           </el-select>
         </el-form-item>
         <el-form-item>
+          <el-button type="primary" @click="fetchList">
+            <el-icon><Search /></el-icon>搜索
+          </el-button>
           <el-button @click="handleReset">重置</el-button>
         </el-form-item>
       </el-form>
@@ -53,9 +68,6 @@
         </el-table-column>
         <el-table-column prop="remarks" label="备注" min-width="140" show-overflow-tooltip>
           <template #default="{ row }">{{ row.remarks || '-' }}</template>
-        </el-table-column>
-        <el-table-column prop="createTime" label="添加时间" width="150" align="center">
-          <template #default="{ row }">{{ formatDateTime(row.createTime) }}</template>
         </el-table-column>
         <el-table-column label="操作" width="160" fixed="right">
           <template #default="{ row }">
@@ -126,14 +138,14 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, Search } from '@element-plus/icons-vue'
 import { getVehicleList, createVehicle, updateVehicle, deleteVehicle } from '@/api/vehicle'
 
 const vehicleList = ref([])
 const loading = ref(false)
 const total = ref(0)
 
-const searchForm = reactive({ page: 1, size: 10, vehicleType: '', status: undefined })
+const searchForm = reactive({ page: 1, size: 10, vehicleType: '', status: undefined, plateNumber: '', brand: '', model: '', seats: undefined })
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
 const isEdit = ref(false)
@@ -156,6 +168,10 @@ async function fetchList() {
     const params = { page: searchForm.page, size: searchForm.size }
     if (searchForm.vehicleType) params.vehicleType = searchForm.vehicleType
     if (searchForm.status) params.status = searchForm.status
+    if (searchForm.plateNumber) params.plateNumber = searchForm.plateNumber
+    if (searchForm.brand) params.brand = searchForm.brand
+    if (searchForm.model) params.model = searchForm.model
+    if (searchForm.seats) params.seats = searchForm.seats
     const res = await getVehicleList(params)
     vehicleList.value = res.records || []
     total.value = res.total || 0
@@ -170,6 +186,10 @@ function handleReset() {
   searchForm.page = 1
   searchForm.vehicleType = ''
   searchForm.status = undefined
+  searchForm.plateNumber = ''
+  searchForm.brand = ''
+  searchForm.model = ''
+  searchForm.seats = undefined
   fetchList()
 }
 
@@ -226,10 +246,6 @@ function getStatusTag(status) {
 
 function getStatusText(status) {
   return { 1: '空闲', 2: '使用中', 3: '维修', 4: '报废' }[status] || '未知'
-}
-
-function formatDateTime(dt) {
-  return dt ? new Date(dt).toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-'
 }
 
 onMounted(fetchList)
