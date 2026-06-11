@@ -20,6 +20,19 @@
         <el-tab-pane label="体检地点" name="3" />
       </el-tabs>
 
+      <!-- 搜索栏 -->
+      <el-form :model="searchForm" inline class="search-form">
+        <el-form-item label="关键字">
+          <el-input v-model="searchForm.keyword" placeholder="名称/地址搜索" clearable style="width: 200px" @keyup.enter="handleSearch" />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="handleSearch">
+            <el-icon><Search /></el-icon>查询
+          </el-button>
+          <el-button @click="handleReset">重置</el-button>
+        </el-form-item>
+      </el-form>
+
       <!-- 数据表格 -->
       <el-table :data="venueList" v-loading="loading" border stripe>
         <el-table-column type="index" label="序号" width="60" align="center" />
@@ -31,7 +44,7 @@
             {{ row.capacity ?? '-' }}
           </template>
         </el-table-column>
-        <el-table-column prop="facilities" label="设施说明" min-width="140" show-overflow-tooltip>
+        <el-table-column prop="facilities" label="设施说明" min-width="160" show-overflow-tooltip>
           <template #default="{ row }">
             {{ row.facilities || '-' }}
           </template>
@@ -54,6 +67,19 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <!-- 分页 -->
+      <div class="pagination-wrapper" v-if="total > 0">
+        <el-pagination
+          v-model:current-page="pagination.page"
+          v-model:page-size="pagination.size"
+          :total="total"
+          layout="total, sizes, prev, pager, next"
+          :page-sizes="[10, 20, 50]"
+          @size-change="handleSearch"
+          @current-change="fetchVenueList"
+        />
+      </div>
 
       <el-empty v-if="!loading && venueList.length === 0" :description="`暂无${venueTypeLabel}`" style="margin-top: 40px" />
     </el-card>
@@ -92,18 +118,25 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Edit, Delete } from '@element-plus/icons-vue'
+import { Plus, Edit, Delete, Search } from '@element-plus/icons-vue'
 import { getVenueList, createVenue, updateVenue, deleteVenue } from '@/api/venue'
 
 const activeTab = ref('1')
 const venueList = ref([])
 const loading = ref(false)
+const total = ref(0)
+const pagination = reactive({ page: 1, size: 10 })
 
 const venueTypeLabel = computed(() => {
   const map = { 1: '考场', 2: '训练场地', 3: '体检地点' }
   return map[activeTab.value] || '场地'
+})
+
+// 搜索表单
+const searchForm = reactive({
+  keyword: '',
 })
 
 // 对话框
@@ -130,19 +163,36 @@ const formRules = {
 async function fetchVenueList() {
   loading.value = true
   try {
-    const params = { venueType: Number(activeTab.value) }
+    const params = {
+      venueType: Number(activeTab.value),
+      keyword: searchForm.keyword || undefined,
+      page: pagination.page,
+      pageSize: pagination.size,
+    }
     const res = await getVenueList(params)
-    venueList.value = res || []
+    venueList.value = res.records || []
+    total.value = res.total || 0
   } catch (error) {
     console.error('获取场地列表失败:', error)
     venueList.value = []
+    total.value = 0
   } finally {
     loading.value = false
   }
 }
 
-function handleTabChange() {
+function handleSearch() {
+  pagination.page = 1
   fetchVenueList()
+}
+
+function handleReset() {
+  searchForm.keyword = ''
+  handleSearch()
+}
+
+function handleTabChange() {
+  handleSearch()
 }
 
 function handleAdd() {
@@ -223,6 +273,16 @@ onMounted(fetchVenueList)
 
   .venue-tabs {
     margin-bottom: 10px;
+  }
+
+  .search-form {
+    margin-bottom: 16px;
+  }
+
+  .pagination-wrapper {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 16px;
   }
 }
 </style>
