@@ -8,6 +8,42 @@
           <el-tag type="danger" v-if="outstandingCount > 0">{{ outstandingCount }} 笔待支付</el-tag>
         </div>
       </template>
+
+      <!-- 欠费搜索栏 -->
+      <el-form :model="outstandingSearchForm" inline class="search-form">
+        <el-form-item label="姓名">
+          <el-input v-model="outstandingSearchForm.keyword" placeholder="学员姓名" clearable style="width: 130px" @keyup.enter="searchOutstanding" />
+        </el-form-item>
+        <el-form-item label="手机号">
+          <el-input v-model="outstandingSearchForm.phone" placeholder="手机号" clearable style="width: 140px" @keyup.enter="searchOutstanding" />
+        </el-form-item>
+        <el-form-item label="车型">
+          <el-select v-model="outstandingSearchForm.licenseType" placeholder="全部" clearable style="width: 100px" @change="searchOutstanding">
+            <el-option label="C1" value="C1" />
+            <el-option label="C2" value="C2" />
+            <el-option label="B1" value="B1" />
+            <el-option label="N1" value="N1" />
+            <el-option label="N2" value="N2" />
+            <el-option label="N3" value="N3" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="业务类型">
+          <el-select v-model="outstandingSearchForm.bizType" placeholder="全部" clearable style="width: 120px" @change="searchOutstanding">
+            <el-option label="报名费" value="registration_fee" />
+            <el-option label="考试费" value="exam_fee" />
+            <el-option label="合场费" value="familiarization_fee" />
+            <el-option label="二次培训费" value="training_fee" />
+            <el-option label="其他" value="other" />
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="searchOutstanding">
+            <el-icon><Search /></el-icon>查询
+          </el-button>
+          <el-button @click="resetOutstandingSearch">重置</el-button>
+        </el-form-item>
+      </el-form>
+
       <el-table :data="outstandingList" v-loading="outstandingLoading" border stripe max-height="300">
         <el-table-column type="index" label="序号" width="60" align="center" />
         <el-table-column label="学员姓名" width="100" align="center">
@@ -27,8 +63,8 @@
         </el-table-column>
         <el-table-column label="业务类型" width="120" align="center">
           <template #default="{ row }">
-            <el-tag size="small" :type="getBizTypeTagType(row.bizType)">
-              {{ getBizTypeText(row.bizType) }}
+            <el-tag size="small" :type="getBizTypeTagType(row.biz_type)">
+              {{ getBizTypeText(row.biz_type) }}
             </el-tag>
           </template>
         </el-table-column>
@@ -40,11 +76,6 @@
         <el-table-column label="备注" min-width="120" show-overflow-tooltip>
           <template #default="{ row }">
             {{ row.remark || '-' }}
-          </template>
-        </el-table-column>
-        <el-table-column label="创建时间" width="160" align="center">
-          <template #default="{ row }">
-            {{ formatDateTime(row.createTime) }}
           </template>
         </el-table-column>
         <el-table-column label="操作" width="100" fixed="right" align="center">
@@ -78,8 +109,11 @@
 
       <!-- 筛选栏 -->
       <el-form :model="searchForm" inline class="search-form">
+        <el-form-item label="学员姓名">
+          <el-input v-model="searchForm.keyword" placeholder="姓名搜索" clearable style="width: 140px" @keyup.enter="handleSearch" />
+        </el-form-item>
         <el-form-item label="业务类型">
-          <el-select v-model="searchForm.bizType" placeholder="全部" clearable style="width: 140px" @change="handleSearch">
+          <el-select v-model="searchForm.bizType" placeholder="全部" clearable style="width: 130px" @change="handleSearch">
             <el-option label="报名费" value="registration_fee" />
             <el-option label="考试费" value="exam_fee" />
             <el-option label="合场费" value="familiarization_fee" />
@@ -88,25 +122,31 @@
           </el-select>
         </el-form-item>
         <el-form-item label="状态">
-          <el-select v-model="searchForm.status" placeholder="全部" clearable style="width: 120px" @change="handleSearch">
+          <el-select v-model="searchForm.status" placeholder="全部" clearable style="width: 100px" @change="handleSearch">
             <el-option label="待支付" :value="0" />
             <el-option label="已支付" :value="1" />
             <el-option label="已退款" :value="2" />
           </el-select>
         </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="handleSearch">
+            <el-icon><Search /></el-icon>查询
+          </el-button>
+          <el-button @click="handleReset">重置</el-button>
+        </el-form-item>
       </el-form>
 
       <el-table :data="recordList" v-loading="loading" border stripe>
         <el-table-column type="index" label="序号" width="60" align="center" />
-        <el-table-column label="学员ID" width="80" align="center">
+        <el-table-column label="学员姓名" width="100" align="center">
           <template #default="{ row }">
-            {{ row.studentId || '-' }}
+            {{ row.student_name || '-' }}
           </template>
         </el-table-column>
         <el-table-column label="业务类型" width="120" align="center">
           <template #default="{ row }">
-            <el-tag size="small" :type="getBizTypeTagType(row.bizType)">
-              {{ getBizTypeText(row.bizType) }}
+            <el-tag size="small" :type="getBizTypeTagType(row.biz_type)">
+              {{ getBizTypeText(row.biz_type) }}
             </el-tag>
           </template>
         </el-table-column>
@@ -129,12 +169,12 @@
         </el-table-column>
         <el-table-column label="创建时间" width="160" align="center">
           <template #default="{ row }">
-            {{ formatDateTime(row.createTime) }}
+            {{ formatDateTime(row.create_time) }}
           </template>
         </el-table-column>
         <el-table-column label="支付时间" width="160" align="center">
           <template #default="{ row }">
-            {{ row.payTime ? formatDateTime(row.payTime) : '-' }}
+            {{ row.pay_time ? formatDateTime(row.pay_time) : '-' }}
           </template>
         </el-table-column>
         <el-table-column label="操作" width="160" fixed="right" align="center">
@@ -255,7 +295,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Refresh } from '@element-plus/icons-vue'
+import { Plus, Refresh, Search } from '@element-plus/icons-vue'
 import { getStudentList } from '@/api/student'
 import {
   getMyPaymentRecords,
@@ -282,8 +322,16 @@ const recordSize = ref(10)
 const actionLoading = ref(false)
 
 const searchForm = reactive({
+  keyword: '',
   bizType: '',
   status: undefined,
+})
+
+const outstandingSearchForm = reactive({
+  keyword: '',
+  phone: '',
+  licenseType: '',
+  bizType: '',
 })
 
 const createDialogVisible = ref(false)
@@ -351,6 +399,10 @@ async function fetchOutstanding() {
   outstandingLoading.value = true
   try {
     const params = { page: outstandingPage.value, size: outstandingSize.value }
+    if (outstandingSearchForm.keyword) params.keyword = outstandingSearchForm.keyword
+    if (outstandingSearchForm.phone) params.phone = outstandingSearchForm.phone
+    if (outstandingSearchForm.licenseType) params.licenseType = outstandingSearchForm.licenseType
+    if (outstandingSearchForm.bizType) params.bizType = outstandingSearchForm.bizType
     const res = await getOutstandingPayments(params)
     outstandingList.value = Array.isArray(res) ? res : res.records || []
     outstandingTotal.value = res.total || outstandingList.value.length
@@ -361,15 +413,36 @@ async function fetchOutstanding() {
   }
 }
 
+function searchOutstanding() {
+  outstandingPage.value = 1
+  fetchOutstanding()
+}
+
+function resetOutstandingSearch() {
+  outstandingSearchForm.keyword = ''
+  outstandingSearchForm.phone = ''
+  outstandingSearchForm.licenseType = ''
+  outstandingSearchForm.bizType = ''
+  searchOutstanding()
+}
+
 function handleSearch() {
   recordPage.value = 1
   fetchList()
+}
+
+function handleReset() {
+  searchForm.keyword = ''
+  searchForm.bizType = ''
+  searchForm.status = undefined
+  handleSearch()
 }
 
 async function fetchList() {
   loading.value = true
   try {
     const params = { page: recordPage.value, size: recordSize.value }
+    if (searchForm.keyword) params.keyword = searchForm.keyword
     if (searchForm.bizType) params.bizType = searchForm.bizType
     if (searchForm.status !== undefined && searchForm.status !== null) params.status = searchForm.status
 
@@ -462,7 +535,7 @@ async function confirmCreate() {
 async function handlePay(row) {
   try {
     await ElMessageBox.confirm(
-      `确定确认支付「${getBizTypeText(row.bizType)}」¥${row.amount} 吗？`,
+      `确定确认支付「${getBizTypeText(row.biz_type)}」¥${row.amount} 吗？`,
       '确认支付',
       { type: 'info' }
     )
@@ -480,7 +553,7 @@ async function handlePay(row) {
 async function handleRefund(row) {
   try {
     await ElMessageBox.confirm(
-      `确定退款「${getBizTypeText(row.bizType)}」¥${row.amount} 吗？`,
+      `确定退款「${getBizTypeText(row.biz_type)}」¥${row.amount} 吗？`,
       '确认退款',
       { type: 'warning' }
     )
