@@ -66,7 +66,14 @@ import {
 const userStore = useUserStore()
 const router = useRouter()
 
+// 按车型限制的功能路由（examMode: 1=普通车, 2=特种车）
+const REGULAR_ONLY_ROUTES = ['/student/exam-registration', '/student/scores']
+const SPECIAL_ONLY_ROUTES = [] // 特种车专属（暂无学员端页面）
+
 const menuMap = {
+  0: [
+    { label: '驾考报名', desc: '选择套餐完成报名', icon: Edit, type: 'primary', route: '/student/enrollment' },
+  ],
   1: [
     { label: '约课管理', desc: '预约或取消课程', icon: Calendar, type: 'primary', route: '/student/appointment' },
     { label: '考试报名', desc: '报名考试场次', icon: Edit, type: 'success', route: '/student/exam-registration' },
@@ -120,11 +127,24 @@ const menuMap = {
 const menuItems = computed(() => menuMap[userStore.role] || [])
 
 function handleClick(item) {
-  if (item.route) {
-    router.push(item.route)
-  } else {
+  if (!item.route) {
     ElMessage.info(`「${item.label}」功能待开发`)
+    return
   }
+
+  const lt = userStore.licenseType || ''
+  // 特种车点击普通车专属功能（examMode=2 表示特种车）
+  if (userStore.isSpecial && REGULAR_ONLY_ROUTES.includes(item.route)) {
+    ElMessage.warning(`您报考的是特种车辆（${lt}），无需使用此功能`)
+    return
+  }
+  // 普通车点击特种车专属功能
+  if (userStore.examMode === 1 && SPECIAL_ONLY_ROUTES.includes(item.route)) {
+    ElMessage.warning(`您报考的是普通车型（${lt}），无需使用特种车辆相关功能`)
+    return
+  }
+
+  router.push(item.route)
 }
 </script>
 

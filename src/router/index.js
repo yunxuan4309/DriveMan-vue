@@ -92,6 +92,12 @@ const routes = [
         component: () => import('@/views/student/LicenseUpgrade.vue'),
         meta: { title: '增驾申请', roles: [1] },
       },
+      {
+        path: 'enrollment',
+        name: 'StudentEnrollment',
+        component: () => import('@/views/student/EnrollmentApply.vue'),
+        meta: { title: '驾考报名', roles: [0, 1] },
+      },
     ],
   },
   // ── 教练功能路由 ─────────────────────────────────────
@@ -322,11 +328,14 @@ router.beforeEach(async (to, _from, next) => {
     return next({ name: 'Login' })
   }
 
-  // ★ 后续如需角色路由控制，在此追加：
-  // const routeRoles = to.meta.roles   // [1, 2, 3]
-  // if (routeRoles && !routeRoles.includes(userStore.role)) {
-  //   return next({ name: '403' })
-  // }
+  // 角色路由控制
+  const routeRoles = to.meta.roles
+  if (routeRoles && !routeRoles.includes(userStore.role)) {
+    if (userStore.role === 0) {
+      return next({ name: 'StudentEnrollment' })
+    }
+    return next({ name: 'Home' })
+  }
 
   next()
 })

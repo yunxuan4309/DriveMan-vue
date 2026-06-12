@@ -6,44 +6,92 @@
         <p>驾校报名管理系统</p>
       </div>
 
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="0">
-        <el-form-item prop="username">
-          <el-input
-            v-model="form.username"
-            placeholder="用户名"
-            :prefix-icon="User"
-            size="large"
-          />
-        </el-form-item>
+      <el-tabs v-model="activeTab" class="login-tabs">
+        <!-- 登录标签页 -->
+        <el-tab-pane label="登录" name="login">
+          <el-form ref="loginFormRef" :model="loginForm" :rules="loginRules" label-width="0">
+            <el-form-item prop="username">
+              <el-input
+                v-model="loginForm.username"
+                placeholder="用户名"
+                :prefix-icon="User"
+                size="large"
+              />
+            </el-form-item>
 
-        <el-form-item prop="password">
-          <el-input
-            v-model="form.password"
-            type="password"
-            placeholder="密码"
-            :prefix-icon="Lock"
-            size="large"
-            show-password
-            @keyup.enter="handleLogin"
-          />
-        </el-form-item>
+            <el-form-item prop="password">
+              <el-input
+                v-model="loginForm.password"
+                type="password"
+                placeholder="密码"
+                :prefix-icon="Lock"
+                size="large"
+                show-password
+                @keyup.enter="handleLogin"
+              />
+            </el-form-item>
 
-        <el-button
-          type="primary"
-          size="large"
-          class="login-btn"
-          :loading="loading"
-          @click="handleLogin"
-        >
-          登 录
-        </el-button>
+            <el-button
+              type="primary"
+              size="large"
+              class="login-btn"
+              :loading="loginLoading"
+              @click="handleLogin"
+            >
+              登 录
+            </el-button>
+          </el-form>
+        </el-tab-pane>
 
-        <div class="role-hint">
-          <span v-for="r in roles" :key="r.value">
-            <el-tag :type="r.tag" size="small">{{ r.label }}</el-tag>
-          </span>
-        </div>
-      </el-form>
+        <!-- 注册标签页 -->
+        <el-tab-pane label="学员注册" name="register">
+          <el-form ref="registerFormRef" :model="registerForm" :rules="registerRules" label-width="0">
+            <el-form-item prop="username">
+              <el-input v-model="registerForm.username" placeholder="用户名" :prefix-icon="User" size="large" />
+            </el-form-item>
+
+            <el-form-item prop="password">
+              <el-input v-model="registerForm.password" type="password" placeholder="密码" :prefix-icon="Lock" size="large" show-password />
+            </el-form-item>
+
+            <el-form-item prop="confirmPassword">
+              <el-input v-model="registerForm.confirmPassword" type="password" placeholder="确认密码" :prefix-icon="Lock" size="large" show-password />
+            </el-form-item>
+
+            <el-form-item prop="realName">
+              <el-input v-model="registerForm.realName" placeholder="真实姓名" :prefix-icon="User" size="large" />
+            </el-form-item>
+
+            <el-form-item prop="phone">
+              <el-input v-model="registerForm.phone" placeholder="手机号" :prefix-icon="Phone" size="large" />
+            </el-form-item>
+
+            <el-form-item prop="idCard">
+              <el-input v-model="registerForm.idCard" placeholder="身份证号" :prefix-icon="Document" size="large" />
+            </el-form-item>
+
+            <el-form-item prop="address">
+              <el-input v-model="registerForm.address" placeholder="通讯地址（选填）" :prefix-icon="Location" size="large" />
+            </el-form-item>
+
+            <el-button
+              type="success"
+              size="large"
+              class="login-btn"
+              :loading="registerLoading"
+              @click="handleRegister"
+            >
+              注 册
+            </el-button>
+          </el-form>
+        </el-tab-pane>
+      </el-tabs>
+
+      <div class="role-hint">
+        <span v-for="r in roles" :key="r.value">
+          <el-tag :type="r.tag" size="small">{{ r.label }}</el-tag>
+        </span>
+      </div>
     </el-card>
   </div>
 </template>
@@ -52,13 +100,18 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { User, Lock } from '@element-plus/icons-vue'
+import { User, Lock, Phone, Document, Location } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
+import request from '@/api/request'
 
 const router = useRouter()
 const userStore = useUserStore()
-const formRef = ref(null)
-const loading = ref(false)
+
+const activeTab = ref('login')
+const loginFormRef = ref(null)
+const registerFormRef = ref(null)
+const loginLoading = ref(false)
+const registerLoading = ref(false)
 
 const roles = [
   { label: '管理员 admin / admin123', value: 3, tag: 'danger' },
@@ -66,32 +119,125 @@ const roles = [
   { label: '学员', value: 1, tag: 'success' },
 ]
 
-const form = reactive({
+// ── 登录 ────────────────────────────────────────────
+const loginForm = reactive({
   username: '',
   password: '',
 })
 
-const rules = {
+const loginRules = {
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
 }
 
 async function handleLogin() {
-  formRef.value.validate(async (valid) => {
+  loginFormRef.value.validate(async (valid) => {
     if (!valid) return
 
-    loading.value = true
+    loginLoading.value = true
     try {
       await userStore.login({
-        username: form.username,
-        password: form.password,
+        username: loginForm.username,
+        password: loginForm.password,
       })
-      ElMessage.success(`欢迎，${userStore.roleLabel}`)
-      router.push('/')
-    } catch (err) {
+      ElMessage.success(`欢迎，${userStore.roleLabel || '准学员'}`)
+
+      // role=0 准学员 → 跳转驾考报名页
+      if (userStore.role === 0) {
+        router.push('/student/enrollment')
+      } else {
+        router.push('/')
+      }
+    } catch {
       // 错误已由响应拦截器统一处理
     } finally {
-      loading.value = false
+      loginLoading.value = false
+    }
+  })
+}
+
+// ── 注册 ────────────────────────────────────────────
+const registerForm = reactive({
+  username: '',
+  password: '',
+  confirmPassword: '',
+  realName: '',
+  phone: '',
+  idCard: '',
+  address: '',
+})
+
+const validateConfirmPassword = (_rule, value, callback) => {
+  if (value !== registerForm.password) {
+    callback(new Error('两次输入的密码不一致'))
+  } else {
+    callback()
+  }
+}
+
+const validatePhone = (_rule, value, callback) => {
+  if (!value) return callback()
+  if (!/^1[3-9]\d{9}$/.test(value)) {
+    callback(new Error('手机号格式不正确'))
+  } else {
+    callback()
+  }
+}
+
+const validateIdCard = (_rule, value, callback) => {
+  if (!value) return callback()
+  if (!/^[1-9]\d{5}(19|20)\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{3}[\dXx]$/.test(value)) {
+    callback(new Error('身份证号格式不正确'))
+  } else {
+    callback()
+  }
+}
+
+const registerRules = {
+  username: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { min: 3, max: 20, message: '用户名长度 3-20 个字符', trigger: 'blur' },
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, max: 20, message: '密码长度 6-20 个字符', trigger: 'blur' },
+  ],
+  confirmPassword: [
+    { required: true, message: '请确认密码', trigger: 'blur' },
+    { validator: validateConfirmPassword, trigger: 'blur' },
+  ],
+  realName: [{ required: true, message: '请输入真实姓名', trigger: 'blur' }],
+  phone: [
+    { required: true, message: '请输入手机号', trigger: 'blur' },
+    { validator: validatePhone, trigger: 'blur' },
+  ],
+  idCard: [
+    { required: true, message: '请输入身份证号', trigger: 'blur' },
+    { validator: validateIdCard, trigger: 'blur' },
+  ],
+}
+
+async function handleRegister() {
+  registerFormRef.value.validate(async (valid) => {
+    if (!valid) return
+
+    registerLoading.value = true
+    try {
+      await request.post('/register', {
+        username: registerForm.username,
+        password: registerForm.password,
+        realName: registerForm.realName,
+        phone: registerForm.phone,
+        idCard: registerForm.idCard,
+        address: registerForm.address || null,
+      })
+      ElMessage.success('注册成功，请登录')
+      activeTab.value = 'login'
+      registerFormRef.value.resetFields()
+    } catch {
+      // 错误已由响应拦截器统一处理
+    } finally {
+      registerLoading.value = false
     }
   })
 }
@@ -107,17 +253,17 @@ async function handleLogin() {
 }
 
 .login-card {
-  width: 420px;
+  width: 440px;
   border-radius: 8px;
 
   :deep(.el-card__body) {
-    padding: 40px;
+    padding: 32px 40px;
   }
 }
 
 .login-header {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 20px;
 
   h2 {
     font-size: 28px;
@@ -128,6 +274,12 @@ async function handleLogin() {
   p {
     font-size: 14px;
     color: #999;
+  }
+}
+
+.login-tabs {
+  :deep(.el-tabs__nav-wrap::after) {
+    height: 1px;
   }
 }
 

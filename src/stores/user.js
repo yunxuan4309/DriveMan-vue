@@ -6,7 +6,10 @@ export const useUserStore = defineStore('user', () => {
   // ── 状态 ──────────────────────────────────────────────
   const token = ref(localStorage.getItem('token') || '')
   const userId = ref(Number(localStorage.getItem('userId') || 0))
-  const role = ref(Number(localStorage.getItem('role') || 0))   // 1=学员 2=教练 3=管理员
+  const role = ref(Number(localStorage.getItem('role') || 0))   // 0=准学员 1=学员 2=教练 3=管理员
+  const licenseType = ref(localStorage.getItem('licenseType') || '')
+  const examMode = ref(Number(localStorage.getItem('examMode') || 0))  // 1=普通车 2=特种车
+  const isSpecial = computed(() => examMode.value === 2)
   const userInfo = ref({
     username: localStorage.getItem('username') || '',
     realName: localStorage.getItem('realName') || '',
@@ -16,7 +19,7 @@ export const useUserStore = defineStore('user', () => {
   const isLoggedIn = computed(() => !!token.value)
 
   const roleLabel = computed(() => {
-    const map = { 1: '学员', 2: '教练', 3: '管理员' }
+    const map = { 0: '准学员', 1: '学员', 2: '教练', 3: '管理员' }
     return map[role.value] || ''
   })
 
@@ -35,6 +38,8 @@ export const useUserStore = defineStore('user', () => {
     token.value = data.token
     userId.value = data.userId
     role.value = data.role
+    licenseType.value = data.licenseType || ''
+    examMode.value = data.examMode || 0
     userInfo.value = {
       username: data.username,
       realName: data.realName,
@@ -44,6 +49,8 @@ export const useUserStore = defineStore('user', () => {
     localStorage.setItem('token', data.token)
     localStorage.setItem('userId', data.userId)
     localStorage.setItem('role', data.role)
+    localStorage.setItem('licenseType', data.licenseType || '')
+    localStorage.setItem('examMode', data.examMode || 0)
     localStorage.setItem('username', data.username)
     localStorage.setItem('realName', data.realName)
 
@@ -55,11 +62,15 @@ export const useUserStore = defineStore('user', () => {
     token.value = ''
     userId.value = 0
     role.value = 0
+    licenseType.value = ''
+    examMode.value = 0
     userInfo.value = { username: '', realName: '' }
 
     localStorage.removeItem('token')
     localStorage.removeItem('userId')
     localStorage.removeItem('role')
+    localStorage.removeItem('licenseType')
+    localStorage.removeItem('examMode')
     localStorage.removeItem('username')
     localStorage.removeItem('realName')
   }
@@ -78,6 +89,8 @@ export const useUserStore = defineStore('user', () => {
     token.value = saved
     userId.value = Number(localStorage.getItem('userId') || 0)
     role.value = Number(localStorage.getItem('role') || 0)
+    licenseType.value = localStorage.getItem('licenseType') || ''
+    examMode.value = Number(localStorage.getItem('examMode') || 0)
     userInfo.value = {
       username: localStorage.getItem('username') || '',
       realName: localStorage.getItem('realName') || '',
@@ -85,7 +98,7 @@ export const useUserStore = defineStore('user', () => {
     return true
   }
 
-  return { token, userId, role, userInfo, isLoggedIn, roleLabel, login, logout, restoreSession }
+  return { token, userId, role, licenseType, examMode, isSpecial, userInfo, isLoggedIn, roleLabel, login, logout, restoreSession }
 })
 
 // ── 工具：解析 JWT 的 exp 判断是否过期 ──────────────────
