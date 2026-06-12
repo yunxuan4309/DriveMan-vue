@@ -10,6 +10,19 @@
         </div>
       </template>
 
+      <!-- 搜索栏 -->
+      <el-form :model="searchForm" inline class="search-form">
+        <el-form-item label="关键字">
+          <el-input v-model="searchForm.keyword" placeholder="配置键 / 配置值 / 说明" clearable style="width: 260px" @keyup.enter="fetchList" />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="fetchList">
+            <el-icon><Search /></el-icon>搜索
+          </el-button>
+          <el-button @click="handleReset">重置</el-button>
+        </el-form-item>
+      </el-form>
+
       <el-table :data="configList" v-loading="loading" border stripe>
         <el-table-column type="index" label="序号" width="60" align="center" />
         <el-table-column prop="configKey" label="配置键" width="200">
@@ -33,6 +46,19 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <!-- 分页 -->
+      <div class="pagination-wrapper" v-if="total > 0">
+        <el-pagination
+          v-model:current-page="searchForm.page"
+          v-model:page-size="searchForm.size"
+          :total="total"
+          :page-sizes="[10, 20, 50]"
+          layout="total, sizes, prev, pager, next"
+          @current-change="fetchList"
+          @size-change="handleSizeChange"
+        />
+      </div>
 
       <el-empty v-if="!loading && configList.length === 0" description="暂无配置项" style="margin-top: 40px" />
     </el-card>
@@ -61,11 +87,14 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, Search } from '@element-plus/icons-vue'
 import { getAllConfigs, createConfig, updateConfig, deleteConfig } from '@/api/config'
 
 const configList = ref([])
 const loading = ref(false)
+const total = ref(0)
+
+const searchForm = reactive({ page: 1, size: 10, keyword: '' })
 
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
@@ -85,13 +114,27 @@ const formRules = {
 async function fetchList() {
   loading.value = true
   try {
-    const res = await getAllConfigs()
-    configList.value = Array.isArray(res) ? res : []
+    const params = { page: searchForm.page, size: searchForm.size }
+    if (searchForm.keyword) params.keyword = searchForm.keyword
+    const res = await getAllConfigs(params)
+    configList.value = res.records || []
+    total.value = res.total || 0
   } catch (error) {
     console.error('获取配置失败:', error)
   } finally {
     loading.value = false
   }
+}
+
+function handleReset() {
+  searchForm.page = 1
+  searchForm.keyword = ''
+  fetchList()
+}
+
+function handleSizeChange() {
+  searchForm.page = 1
+  fetchList()
 }
 
 function handleAdd() {
@@ -153,6 +196,8 @@ onMounted(fetchList)
 
 <style scoped lang="scss">
 .card-header { display: flex; justify-content: space-between; align-items: center; }
+.search-form { margin-bottom: 10px; }
+.pagination-wrapper { display: flex; justify-content: flex-end; margin-top: 16px; }
 .config-value {
   background: #f5f7fa;
   padding: 2px 8px;

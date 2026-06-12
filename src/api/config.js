@@ -5,9 +5,9 @@ import request from './request'
  * 基础路径：/configs
  */
 
-// 查询所有配置项
-export function getAllConfigs() {
-  return request.get('/configs')
+// 分页查询配置项
+export function getAllConfigs(params) {
+  return request.get('/configs', { params })
 }
 
 // 按 Key 查询
