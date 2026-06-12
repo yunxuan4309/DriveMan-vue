@@ -50,25 +50,51 @@
         </div>
       </template>
 
+      <!-- 筛选栏 -->
+      <el-form :model="filterForm" layout="inline" style="margin-bottom: 16px">
+        <el-form-item label="培训车型">
+          <el-select v-model="filterForm.licenseType" placeholder="全部车型" clearable style="width: 120px" @change="fetchSchedules">
+            <el-option label="C1" value="C1" />
+            <el-option label="C2" value="C2" />
+            <el-option label="B1" value="B1" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="filterForm.status" placeholder="全部状态" clearable style="width: 120px" @change="fetchSchedules">
+            <el-option label="待审核" :value="0" />
+            <el-option label="已通过" :value="1" />
+            <el-option label="已拒绝" :value="2" />
+            <el-option label="已完成" :value="3" />
+            <el-option label="已取消" :value="4" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="开始时间">
+          <el-date-picker v-model="filterForm.dateRange" type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" value-format="YYYY-MM-DD" style="width: 260px" @change="fetchSchedules" />
+        </el-form-item>
+        <el-form-item>
+          <el-button @click="resetFilter">重置</el-button>
+        </el-form-item>
+      </el-form>
+
       <el-table :data="scheduleList" v-loading="scheduleLoading" border stripe>
         <el-table-column type="index" label="序号" width="60" align="center" />
         <el-table-column label="车型" width="70" align="center">
-          <template #default="{ row }"><el-tag size="small">{{ row.licenseType }}</el-tag></template>
+          <template #default="{ row }"><el-tag size="small">{{ row.license_type }}</el-tag></template>
         </el-table-column>
         <el-table-column label="车辆" width="120">
-          <template #default="{ row }">{{ row.plateNumber || '-' }}</template>
+          <template #default="{ row }">{{ row.plate_number || '-' }}</template>
         </el-table-column>
         <el-table-column label="场地" min-width="140" show-overflow-tooltip>
-          <template #default="{ row }">{{ row.venueName || '-' }}</template>
+          <template #default="{ row }">{{ row.venue_name || '-' }}</template>
         </el-table-column>
         <el-table-column label="开始时间" width="150" align="center">
-          <template #default="{ row }">{{ formatDateTime(row.startTime) }}</template>
+          <template #default="{ row }">{{ formatDateTime(row.start_time) }}</template>
         </el-table-column>
         <el-table-column label="结束时间" width="150" align="center">
-          <template #default="{ row }">{{ formatDateTime(row.endTime) }}</template>
+          <template #default="{ row }">{{ formatDateTime(row.end_time) }}</template>
         </el-table-column>
         <el-table-column label="名额" width="60" align="center">
-          <template #default="{ row }">{{ row.bookedCount }}/{{ row.maxStudents }}</template>
+          <template #default="{ row }">{{ row.booked_count }}/{{ row.max_students }}</template>
         </el-table-column>
         <el-table-column label="状态" width="90" align="center">
           <template #default="{ row }">
@@ -76,7 +102,7 @@
           </template>
         </el-table-column>
         <el-table-column label="审核备注" min-width="120" show-overflow-tooltip>
-          <template #default="{ row }">{{ row.auditRemark || '-' }}</template>
+          <template #default="{ row }">{{ row.audit_remark || '-' }}</template>
         </el-table-column>
         <el-table-column label="操作" width="90" fixed="right" align="center">
           <template #default="{ row }">
@@ -85,6 +111,19 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <!-- 分页 -->
+      <div style="display: flex; justify-content: flex-end; margin-top: 16px">
+        <el-pagination
+          v-model:current-page="pageInfo.current"
+          v-model:page-size="pageInfo.size"
+          :total="pageInfo.total"
+          :page-sizes="[5, 10, 20, 50]"
+          layout="total, sizes, prev, pager, next, jumper"
+          @current-change="fetchSchedules"
+          @size-change="fetchSchedules"
+        />
+      </div>
 
       <el-empty v-if="!scheduleLoading && scheduleList.length === 0" description="暂无排班记录" style="margin-top: 30px" />
     </el-card>
@@ -119,6 +158,20 @@ const venueOptions = ref([])
 const scheduleList = ref([])
 const scheduleLoading = ref(false)
 
+// 筛选条件
+const filterForm = reactive({
+  licenseType: '',
+  status: null,
+  dateRange: null,
+})
+
+// 分页信息
+const pageInfo = reactive({
+  current: 1,
+  size: 10,
+  total: 0,
+})
+
 async function fetchAvailableVehicles() {
   try {
     const params = {}
@@ -133,7 +186,7 @@ async function fetchAvailableVehicles() {
 async function fetchVenues() {
   try {
     const res = await getVenueList({ venueType: 2 })
-    venueOptions.value = Array.isArray(res) ? res : []
+    venueOptions.value = res?.records || []
   } catch (error) {
     console.error('获取场地失败:', error)
   }
@@ -159,13 +212,36 @@ async function handleApply() {
 async function fetchSchedules() {
   scheduleLoading.value = true
   try {
-    const res = await getMySchedules()
-    scheduleList.value = Array.isArray(res) ? res : []
+    const params = {
+      page: pageInfo.current,
+      size: pageInfo.size,
+    }
+    if (filterForm.licenseType) params.licenseType = filterForm.licenseType
+    if (filterForm.status !== null && filterForm.status !== '') params.status = filterForm.status
+    if (filterForm.dateRange) {
+      params.startDateStart = filterForm.dateRange[0]
+      params.startDateEnd = filterForm.dateRange[1]
+    }
+    const res = await getMySchedules(params)
+    scheduleList.value = res?.records || []
+    if (res) {
+      pageInfo.current = res.current || 1
+      pageInfo.size = res.size || 10
+      pageInfo.total = res.total || 0
+    }
   } catch (error) {
     console.error('获取排班失败:', error)
   } finally {
     scheduleLoading.value = false
   }
+}
+
+function resetFilter() {
+  filterForm.licenseType = ''
+  filterForm.status = null
+  filterForm.dateRange = null
+  pageInfo.current = 1
+  fetchSchedules()
 }
 
 async function handleCancel(row) {
