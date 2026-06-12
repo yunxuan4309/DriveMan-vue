@@ -24,7 +24,7 @@ export function getMyFiles(params) {
 
 // 查询某用户的所有文件（管理员专用）
 export function getUserFiles(userId) {
-  return request.get(`/files/user/${userId}`)
+  return request.get(`/files/by-user/${userId}`)
 }
 
 // 按业务查询附件

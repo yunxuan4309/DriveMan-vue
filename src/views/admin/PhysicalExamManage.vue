@@ -76,12 +76,10 @@
               size="small"
               @click="handleAudit(row)"
             >审核</el-button>
-            <el-button
-              v-if="row.status === 1"
-              type="success"
-              size="small"
-              @click="handleRecordResult(row)"
-            >录入结果</el-button>
+            <template v-if="row.status === 1">
+              <el-button type="warning" size="small" @click="handleSendFileRequest(row)">发送文件请求</el-button>
+              <el-button type="success" size="small" @click="handleRecordResult(row)">录入结果</el-button>
+            </template>
             <span v-else-if="row.status !== 0 && row.status !== 1" class="text-gray">-</span>
           </template>
         </el-table-column>
@@ -121,27 +119,23 @@
     </el-dialog>
 
     <!-- 录入体检结果对话框 -->
-    <el-dialog v-model="resultDialogVisible" title="录入体检结果" width="480px" destroy-on-close>
+    <el-dialog v-model="resultDialogVisible" title="录入体检结果" width="520px" destroy-on-close>
       <el-form :model="resultForm" label-width="100px">
         <el-form-item label="体检地点">
           <span>{{ currentRow?.location }}</span>
         </el-form-item>
-        <el-form-item label="体检报告" prop="fileId">
-          <el-upload
-            :auto-upload="false"
-            :show-file-list="false"
-            :on-change="handleResultFileChange"
-            accept=".jpg,.jpeg,.png,.pdf"
-          >
-            <el-button type="primary" plain>
-              {{ resultFileName || '选择体检报告文件' }}
-            </el-button>
-            <template #tip>
-              <div style="color: #909399; font-size: 12px; margin-top: 4px">支持 JPG/PNG/PDF 格式</div>
-            </template>
-          </el-upload>
+        <el-form-item label="选择体检报告" prop="fileId">
+          <el-select v-model="resultForm.fileId" placeholder="请选择学员已上传的体检报告" clearable style="width: 100%"
+            :loading="fileListLoading">
+            <el-option v-for="f in studentFileList" :key="f.id"
+              :label="`${f.fileName} (${formatFileSize(f.fileSize)} · ${formatDateTime(f.uploadTime)})`"
+              :value="f.id" />
+          </el-select>
+          <div style="color: #909399; font-size: 12px; margin-top: 4px">
+            仅显示该学员已上传的文件
+          </div>
         </el-form-item>
-        <el-form-item label="体检结果">
+        <el-form-item label="体检结果" prop="result">
           <el-radio-group v-model="resultForm.result">
             <el-radio :label="1">合格</el-radio>
             <el-radio :label="0">不合格</el-radio>
@@ -150,25 +144,26 @@
       </el-form>
       <template #footer>
         <el-button @click="resultDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleResultSubmit" :loading="resultLoading">确定</el-button>
+        <el-button type="primary" @click="handleResultSubmit" :loading="resultLoading" :disabled="!resultForm.fileId">确定</el-button>
       </template>
     </el-dialog>
+
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Refresh } from '@element-plus/icons-vue'
-import { useUserStore } from '@/stores/user'
-import { uploadFile } from '@/api/file'
+import { getUserFiles } from '@/api/file'
 import {
   getAllPhysicalExams,
   auditPhysicalExam,
   setPhysicalExamResult,
 } from '@/api/physicalExam'
 
-const userStore = useUserStore()
+const router = useRouter()
 
 const recordList = ref([])
 const loading = ref(false)
@@ -185,12 +180,6 @@ const searchForm = reactive({
 const auditDialogVisible = ref(false)
 const auditForm = reactive({ status: 1, remark: '' })
 const auditLoading = ref(false)
-
-// 录入结果
-const resultDialogVisible = ref(false)
-const resultForm = reactive({ fileId: null, result: 1 })
-const resultLoading = ref(false)
-const resultFileName = ref('')
 
 function handleSearch() {
   pagination.page = 1
@@ -249,46 +238,51 @@ async function handleAuditSubmit() {
   }
 }
 
-function handleRecordResult(row) {
+function handleSendFileRequest(row) {
+  router.push({
+    path: '/admin/file-requests',
+    query: {
+      targetUserId: row.studentId,
+      targetUserName: row.studentName || '',
+      bizType: 'physical_exam',
+      title: '请上传体检结果报告',
+    }
+  })
+}
+
+// 录入结果
+const resultDialogVisible = ref(false)
+const resultForm = reactive({ fileId: null, result: 1 })
+const resultLoading = ref(false)
+const studentFileList = ref([])
+const fileListLoading = ref(false)
+
+async function handleRecordResult(row) {
   currentRow.value = row
   resultForm.fileId = null
   resultForm.result = 1
-  resultFileName.value = ''
-  resultForm._file = null
+  studentFileList.value = []
   resultDialogVisible.value = true
-}
-
-function handleResultFileChange(uploadFile) {
-  resultFileName.value = uploadFile.name
-  resultForm._file = uploadFile.raw
+  // 加载该学员的文件列表
+  fileListLoading.value = true
+  try {
+    const files = await getUserFiles(row.studentId)
+    studentFileList.value = Array.isArray(files) ? files : []
+  } catch {
+    studentFileList.value = []
+  } finally {
+    fileListLoading.value = false
+  }
 }
 
 async function handleResultSubmit() {
-  let fileId = null
-  if (resultForm._file) {
-    resultLoading.value = true
-    try {
-      const uploadRes = await uploadFile(userStore.userId, resultForm._file, 'image', 'physical_exam')
-      fileId = uploadRes?.fileId || uploadRes?.id || uploadRes
-    } catch (error) {
-      console.error('上传体检报告失败:', error)
-      ElMessage.error('体检报告上传失败')
-      resultLoading.value = false
-      return
-    }
-  }
-  if (!fileId) {
-    ElMessage.warning('请上传体检报告文件')
-    resultLoading.value = false
+  if (!resultForm.fileId) {
+    ElMessage.warning('请选择体检报告文件')
     return
   }
-
   resultLoading.value = true
   try {
-    await setPhysicalExamResult(currentRow.value.id, {
-      fileId,
-      result: resultForm.result,
-    })
+    await setPhysicalExamResult(currentRow.value.id, { fileId: resultForm.fileId, result: resultForm.result })
     ElMessage.success('体检结果已录入')
     resultDialogVisible.value = false
     fetchList()
@@ -307,6 +301,13 @@ function getStatusTag(status) {
 function getStatusText(status) {
   const map = { 0: '待审核', 1: '审核通过', 2: '审核不通过', 3: '已完成' }
   return map[status] || '未知'
+}
+
+function formatFileSize(size) {
+  if (!size) return '-'
+  if (size < 1024) return size + ' B'
+  if (size < 1024 * 1024) return (size / 1024).toFixed(1) + ' KB'
+  return (size / (1024 * 1024)).toFixed(1) + ' MB'
 }
 
 function formatDateTime(dateTime) {

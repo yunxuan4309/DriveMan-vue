@@ -160,11 +160,14 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Refresh, Plus } from '@element-plus/icons-vue'
 import { getAllFileRequests, createFileRequest, cancelFileRequest } from '@/api/fileRequest'
 import { searchUsers } from '@/api/user'
 
+const route = useRoute()
+const router = useRouter()
 const requestList = ref([])
 const loading = ref(false)
 const total = ref(0)
@@ -205,10 +208,14 @@ const userSearchRole = ref(null)  // null=学员+教练, 1=学员, 2=教练
 const userOptions = ref([])
 const userSearchLoading = ref(false)
 
-function showCreateDialog() {
-  Object.assign(createForm, { targetUserId: null, title: '', description: '', bizType: 'physical_exam', fileType: 'physical_exam', deadline: '', remark: '' })
+function showCreateDialog(prefill) {
+  const defaults = { targetUserId: null, title: '', description: '', bizType: 'physical_exam', fileType: 'physical_exam', deadline: '', remark: '' }
+  Object.assign(createForm, { ...defaults, ...prefill })
   userSearchRole.value = null
   userOptions.value = []
+  if (prefill?.targetUserId && prefill?.targetUserName) {
+    userOptions.value = [{ userId: prefill.targetUserId, realName: prefill.targetUserName, username: '' }]
+  }
   createDialogVisible.value = true
 }
 
@@ -272,7 +279,19 @@ function formatDateTime(dateTime) {
   })
 }
 
-onMounted(fetchList)
+onMounted(() => {
+  fetchList()
+  // 如果路由带查询参数，自动打开创建对话框
+  const q = route.query
+  if (q.targetUserId) {
+    showCreateDialog({
+      targetUserId: Number(q.targetUserId),
+      targetUserName: q.targetUserName || '',
+      bizType: q.bizType || 'physical_exam',
+      title: q.title || '',
+    })
+  }
+})
 </script>
 
 <style scoped lang="scss">
