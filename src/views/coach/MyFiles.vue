@@ -87,6 +87,16 @@
     <!-- 上传文件对话框 -->
     <el-dialog v-model="uploadDialogVisible" title="上传文件" width="500px" destroy-on-close>
       <el-form :model="uploadForm" :rules="uploadRules" ref="uploadFormRef" label-width="100px">
+        <!-- 关联文件请求 -->
+        <el-form-item v-if="pendingRequests.length > 0" label="关联请求">
+          <el-select v-model="selectedFileRequestId" placeholder="选择一个待完成的文件请求（可选）" clearable style="width: 100%"
+            @change="onFileRequestSelect">
+            <el-option v-for="fr in pendingRequests" :key="fr.id" :label="fr.title" :value="fr.id" />
+          </el-select>
+          <div v-if="selectedFileRequestId" style="color: #67c23a; font-size: 12px; margin-top: 4px">
+            已关联请求，业务类型和文件分类已自动填充
+          </div>
+        </el-form-item>
         <el-form-item label="业务类型" prop="bizType">
           <el-select v-model="uploadForm.bizType" placeholder="请选择业务类型" style="width: 100%">
             <el-option label="用户资料" value="user_profile" />
@@ -137,6 +147,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import { getMyFiles, uploadFile, downloadFile } from '@/api/file'
+import { getMyFileRequests } from '@/api/fileRequest'
 import { useUserStore } from '@/stores/user'
 
 const userStore = useUserStore()
@@ -156,6 +167,9 @@ const uploadFormRef = ref(null)
 const uploadForm = reactive({ bizType: '', fileType: '', file: null })
 const uploadRef = ref(null)
 const uploadLoading = ref(false)
+const pendingRequests = ref([])
+const selectedFileRequestId = ref(null)
+const selectedFileRequest = ref(null)
 
 const previewDialogVisible = ref(false)
 const previewUrl = ref('')
@@ -239,11 +253,34 @@ function onFileChange(uploadFile) {
   uploadForm.file = uploadFile.raw
 }
 
+async function fetchPendingRequests() {
+  try {
+    const res = await getMyFileRequests({ page: 1, size: 50 })
+    pendingRequests.value = (res.records || []).filter(r => r.status === 0)
+  } catch {
+    pendingRequests.value = []
+  }
+}
+
+function onFileRequestSelect(requestId) {
+  selectedFileRequest.value = pendingRequests.value.find(r => r.id === requestId) || null
+  if (selectedFileRequest.value) {
+    uploadForm.bizType = selectedFileRequest.value.bizType || 'coach_qualification'
+    uploadForm.fileType = selectedFileRequest.value.fileType || 'coach_qualification'
+  } else {
+    uploadForm.bizType = ''
+    uploadForm.fileType = ''
+  }
+}
+
 function handleUpload() {
   uploadForm.bizType = ''
   uploadForm.fileType = ''
   uploadForm.file = null
+  selectedFileRequestId.value = null
+  selectedFileRequest.value = null
   uploadDialogVisible.value = true
+  fetchPendingRequests()
 }
 
 async function handleUploadSubmit() {
@@ -262,7 +299,8 @@ async function handleUploadSubmit() {
 
   uploadLoading.value = true
   try {
-    await uploadFile(userStore.userId, uploadForm.file, uploadForm.fileType, uploadForm.bizType)
+    const bizId = selectedFileRequest.value ? selectedFileRequest.value.id : null
+    await uploadFile(userStore.userId, uploadForm.file, uploadForm.fileType, uploadForm.bizType, bizId)
     ElMessage.success('上传成功')
     uploadDialogVisible.value = false
     fetchFiles()

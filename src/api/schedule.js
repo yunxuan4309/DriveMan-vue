@@ -40,7 +40,12 @@ export function getPendingSchedules() {
 
 // 审核排班
 export function auditSchedule(id, data) {
-  return request.put(`/schedules/${id}/audit`, data)
+  const params = new URLSearchParams()
+  params.append('status', data.status)
+  if (data.remark) params.append('remark', data.remark)
+  return request.put(`/schedules/${id}/audit`, params, {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  })
 }
 
 // 查询排班详情

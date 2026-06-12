@@ -58,3 +58,15 @@ export function auditRegistration(userId, pass, reason) {
   }
   return request.put(`/registrations/${userId}/audit?pass=${pass}${reason ? '&reason=' + encodeURIComponent(reason) : ''}`)
 }
+
+// 教练自助注册
+export function coachRegister(data) {
+  return request.post('/coach/register', data)
+}
+
+// 关键词搜索用户（用于下拉选择器远程搜索，可选按角色过滤）
+export function searchUsers(keyword, role) {
+  const params = { keyword }
+  if (role != null) params.role = role
+  return request.get('/users/search', { params })
+}

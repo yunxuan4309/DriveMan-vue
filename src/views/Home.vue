@@ -86,6 +86,7 @@ const menuMap = {
     { label: '二次培训', desc: '挂科补考培训', icon: Edit, type: '', route: '/student/retake-training' },
     { label: '体检申请', desc: '预约体检', icon: Document, type: '', route: '/student/physical-exam' },
     { label: '增驾申请', desc: '申请增驾车型', icon: Trophy, type: '', route: '/student/license-upgrade' },
+    { label: '我的文件请求', desc: '查看和处理文件提交请求', icon: Document, type: '', route: '/student/file-requests' },
   ],
   2: [
     { label: '我的课程', desc: '查看课程安排', icon: Calendar, type: 'primary', route: '/coach/courses' },
@@ -96,6 +97,7 @@ const menuMap = {
     { label: '文件管理', desc: '上传和管理文件', icon: FolderOpened, type: '', route: '/coach/files' },
     { label: '排班管理', desc: '提交/管理排班', icon: Calendar, type: '', route: '/coach/schedule' },
     { label: '二次培训', desc: '学员补考培训', icon: Edit, type: '', route: '/coach/retake-training' },
+    { label: '我的文件请求', desc: '查看和处理文件提交请求', icon: Document, type: '', route: '/coach/file-requests' },
   ],
   3: [
     { label: '学员管理', desc: '管理所有学员', icon: Avatar, type: 'primary', route: '/admin/students' },
@@ -121,6 +123,7 @@ const menuMap = {
     { label: '排班审核', desc: '审核教练排班申请', icon: Calendar, type: '', route: '/admin/schedule-review' },
     { label: '系统配置', desc: '管理系统配置项', icon: Setting, type: '', route: '/admin/system-config' },
     { label: '增驾管理', desc: '审核增驾申请录入成绩', icon: Trophy, type: '', route: '/admin/license-upgrade-manage' },
+    { label: '文件请求管理', desc: '发起和管理文件提交请求', icon: Document, type: '', route: '/admin/file-requests' },
   ],
 }
 

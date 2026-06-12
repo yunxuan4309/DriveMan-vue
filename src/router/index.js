@@ -98,6 +98,12 @@ const routes = [
         component: () => import('@/views/student/EnrollmentApply.vue'),
         meta: { title: '驾考报名', roles: [0, 1] },
       },
+      {
+        path: 'file-requests',
+        name: 'StudentFileRequests',
+        component: () => import('@/views/student/MyFileRequests.vue'),
+        meta: { title: '我的文件请求', roles: [1] },
+      },
     ],
   },
   // ── 教练功能路由 ─────────────────────────────────────
@@ -154,6 +160,12 @@ const routes = [
         name: 'CoachRetakeTraining',
         component: () => import('@/views/coach/RetakeTrainingManage.vue'),
         meta: { title: '二次培训管理', roles: [2] },
+      },
+      {
+        path: 'file-requests',
+        name: 'CoachFileRequests',
+        component: () => import('@/views/student/MyFileRequests.vue'),
+        meta: { title: '我的文件请求', roles: [2] },
       },
     ],
   },
@@ -296,6 +308,12 @@ const routes = [
         name: 'AdminLicenseUpgrade',
         component: () => import('@/views/admin/LicenseUpgradeManage.vue'),
         meta: { title: '增驾申请管理', roles: [3] },
+      },
+      {
+        path: 'file-requests',
+        name: 'FileRequestManage',
+        component: () => import('@/views/admin/FileRequestManage.vue'),
+        meta: { title: '文件请求管理', roles: [3] },
       },
     ],
   },

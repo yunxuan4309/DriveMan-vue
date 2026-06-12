@@ -160,8 +160,13 @@ async function handlePay() {
     )
     payLoading.value = true
 
-    await payEnrollment(paymentInfo.value.paymentId)
+    const res = await payEnrollment(paymentInfo.value.paymentId)
 
+    // 替换新 JWT（后端签发了含 role=1 的新 token）
+    if (res?.token) {
+      localStorage.setItem('token', res.token)
+      userStore.token = res.token
+    }
     // 更新本地 role 缓存
     localStorage.setItem('role', '1')
     userStore.role = 1

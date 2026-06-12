@@ -11,7 +11,12 @@ export function applyRetakeTraining(data) {
 
 // 管理员审核二次培训申请
 export function auditRetakeTraining(id, data) {
-  return request.put(`/retake-trainings/${id}/audit`, data)
+  const params = new URLSearchParams()
+  params.append('pass', data.pass)
+  if (data.amount != null) params.append('amount', data.amount)
+  return request.put(`/retake-trainings/${id}/audit`, params, {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  })
 }
 
 // 教练标记培训完成

@@ -23,6 +23,7 @@
           <el-menu-item index="/admin/vehicles">车辆管理</el-menu-item>
           <el-menu-item index="/admin/schedule-review">排班审核</el-menu-item>
           <el-menu-item index="/admin/system-config">系统配置</el-menu-item>
+          <el-menu-item index="/admin/file-requests">文件请求管理</el-menu-item>
           <el-sub-menu index="/admin/base-data">
             <template #title>基础数据管理</template>
             <el-menu-item index="/admin/fee-standards">费用标准管理</el-menu-item>
@@ -46,6 +47,23 @@
       </div>
     </el-header>
 
+    <!-- 文件请求提醒横幅 -->
+    <div v-if="showFileRequestBanner" class="file-request-banner">
+      <el-alert
+        :title="`您有 ${fileRequestPendingCount} 个待处理的文件提交请求，请尽快上传文件`"
+        type="warning"
+        show-icon
+        :closable="false"
+        style="border-radius: 0"
+      >
+        <template #default>
+          <el-button type="warning" size="small" text @click="goToFileRequests">
+            查看详情
+          </el-button>
+        </template>
+      </el-alert>
+    </div>
+
     <el-main class="app-main">
       <router-view />
     </el-main>
@@ -56,10 +74,11 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
+import { getPendingFileRequestCount } from '@/api/fileRequest'
 
 const route = useRoute()
 const router = useRouter()
@@ -68,9 +87,43 @@ const userStore = useUserStore()
 // 页面刷新时从 localStorage 恢复登录态
 onMounted(() => {
   userStore.restoreSession()
+  if (userStore.isLoggedIn && (userStore.role === 1 || userStore.role === 2)) {
+    fetchFileRequestCount()
+  }
 })
 
 const showLayout = computed(() => route.name !== 'Login')
+
+// 文件请求提醒
+const fileRequestPendingCount = ref(0)
+const showFileRequestBanner = computed(() =>
+  fileRequestPendingCount.value > 0 &&
+  userStore.isLoggedIn &&
+  (userStore.role === 1 || userStore.role === 2)
+)
+
+async function fetchFileRequestCount() {
+  try {
+    fileRequestPendingCount.value = await getPendingFileRequestCount() || 0
+  } catch {
+    fileRequestPendingCount.value = 0
+  }
+}
+
+// 路由变化时重新检查
+watch(() => route.path, () => {
+  if (userStore.isLoggedIn && (userStore.role === 1 || userStore.role === 2)) {
+    fetchFileRequestCount()
+  }
+})
+
+function goToFileRequests() {
+  if (userStore.role === 1) {
+    router.push('/student/file-requests')
+  } else if (userStore.role === 2) {
+    router.push('/coach/file-requests')
+  }
+}
 
 const roleTagType = computed(() => {
   const map = { 1: 'success', 2: 'warning', 3: 'danger' }
