@@ -71,6 +71,11 @@ export function getCoachAppointments(params) {
   return request.get('/coach-portal/appointments', { params })
 }
 
+// 查看已通过排班及预约概览
+export function getApprovedSchedules() {
+  return request.get('/coach-portal/schedules/approved')
+}
+
 // 查看约课日历
 export function getAppointmentCalendar(params) {
   return request.get('/coach-portal/appointments/calendar', { params })
