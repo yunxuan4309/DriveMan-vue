@@ -82,8 +82,7 @@ const menuMap = {
   ],
   2: [
     { label: '我的课程', desc: '查看课程安排', icon: Calendar, type: 'primary', route: '/coach/courses' },
-    { label: '学员管理', desc: '查看绑定的学员', icon: School, type: 'success', route: '/coach/students' },
-    { label: '学员移交', desc: '申请移交学员', icon: Refresh, type: 'warning', route: '/coach/student-transfer' },
+    { label: '学员管理', desc: '学员管理与移交', icon: School, type: 'success', route: '/coach/students' },
     { label: '学员考试', desc: '查看学员考试状态', icon: Trophy, type: 'warning', route: '/coach/exam' },
     { label: '考试场次', desc: '查看考试场次信息', icon: Edit, type: 'info', route: '/coach/exam-sessions' },
     { label: '准教车型申请', desc: '申请增加可教车型', icon: Bicycle, type: '', route: '/coach/vehicle-application' },

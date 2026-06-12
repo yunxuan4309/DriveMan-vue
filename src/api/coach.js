@@ -127,10 +127,10 @@ export function getMyStudents() {
 // 教练移交学员 API
 // ═══════════════════════════════════════════════════════
 
-// 教练申请移交学员
-export function applyStudentTransfer(studentId, targetCoachId, reason) {
+// 教练申请移交学员（支持批量，studentIds 逗号分隔）
+export function applyStudentTransfer(studentIds, targetCoachId, reason) {
   const params = new URLSearchParams()
-  params.append('studentId', studentId)
+  params.append('studentIds', studentIds)
   params.append('targetCoachId', targetCoachId)
   params.append('reason', reason)
   return request.post('/coach-portal/student-transfers', params, {

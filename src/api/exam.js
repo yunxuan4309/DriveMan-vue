@@ -58,9 +58,9 @@ export function getExamRegistrationList(params) {
   return request.get('/exam-registrations', { params })
 }
 
-// 查询某学员的考试报名记录
-export function getStudentExamRegistrations(studentId) {
-  return request.get(`/exam-registrations/student/${studentId}`)
+// 查询某学员的考试报名记录（分页）
+export function getStudentExamRegistrations(studentId, params) {
+  return request.get(`/exam-registrations/student/${studentId}`, { params })
 }
 
 // 查询我的各科成绩（学员端）
