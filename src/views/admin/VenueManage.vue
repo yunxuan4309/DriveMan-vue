@@ -44,6 +44,21 @@
             {{ row.capacity ?? '-' }}
           </template>
         </el-table-column>
+        <el-table-column v-if="activeTab === '2'" prop="maxVehicles" label="最大车辆数" width="100" align="center">
+          <template #default="{ row }">
+            {{ row.maxVehicles ?? '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column v-if="activeTab === '2'" prop="supportedTypes" label="支持车型" width="120" align="center">
+          <template #default="{ row }">
+            {{ row.supportedTypes || '不限' }}
+          </template>
+        </el-table-column>
+        <el-table-column v-if="activeTab === '2'" prop="subjects" label="支持科目" width="120" align="center">
+          <template #default="{ row }">
+            {{ row.subjects || '不限' }}
+          </template>
+        </el-table-column>
         <el-table-column prop="facilities" label="设施说明" min-width="160" show-overflow-tooltip>
           <template #default="{ row }">
             {{ row.facilities || '-' }}
@@ -99,6 +114,17 @@
         <el-form-item label="容纳人数" prop="capacity">
           <el-input-number v-model="form.capacity" :min="0" :max="9999" style="width: 100%" />
         </el-form-item>
+        <el-form-item v-if="activeTab === '2'" label="最大车辆数" prop="maxVehicles">
+          <el-input-number v-model="form.maxVehicles" :min="0" :max="99" style="width: 100%" />
+          <span style="margin-left: 8px; font-size: 12px; color: #909399">训练场地使用</span>
+        </el-form-item>
+        <el-form-item v-if="activeTab === '2'" label="支持车型" prop="supportedTypes">
+          <el-input v-model="form.supportedTypes" placeholder="如：C1,C2，留空表示不限" style="width: 100%" />
+        </el-form-item>
+        <el-form-item v-if="activeTab === '2'" label="支持科目" prop="subjects">
+          <el-input v-model="form.subjects" placeholder="如：2,3，留空表示不限" style="width: 100%" />
+          <span style="margin-left: 8px; font-size: 12px; color: #909399">2-科目二, 3-科目三</span>
+        </el-form-item>
         <el-form-item label="设施说明" prop="facilities">
           <el-input v-model="form.facilities" type="textarea" rows="2" placeholder="如：配备空调、候考室" />
         </el-form-item>
@@ -152,6 +178,9 @@ const form = reactive({
   address: '',
   contactPhone: '',
   capacity: 50,
+  maxVehicles: null,
+  supportedTypes: '',
+  subjects: '',
   facilities: '',
   status: 1,
 })
@@ -251,6 +280,9 @@ function resetForm() {
   form.address = ''
   form.contactPhone = ''
   form.capacity = 50
+  form.maxVehicles = null
+  form.supportedTypes = ''
+  form.subjects = ''
   form.facilities = ''
   form.status = 1
 }

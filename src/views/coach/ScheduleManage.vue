@@ -13,6 +13,12 @@
             <el-option label="B1" value="B1" />
           </el-select>
         </el-form-item>
+        <el-form-item label="培训科目" prop="subject">
+          <el-select v-model="applyForm.subject" placeholder="请选择" style="width: 200px">
+            <el-option label="科目二" :value="2" />
+            <el-option label="科目三" :value="3" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="车辆" prop="vehicleId">
           <el-select v-model="applyForm.vehicleId" placeholder="请先选择车型" style="width: 100%" @focus="fetchAvailableVehicles">
             <el-option v-for="v in vehicleOptions" :key="v.id" :label="`${v.plateNumber} (${v.brand} ${v.model})`" :value="v.id" />
@@ -81,6 +87,11 @@
         <el-table-column label="车型" width="70" align="center">
           <template #default="{ row }"><el-tag size="small">{{ row.license_type }}</el-tag></template>
         </el-table-column>
+        <el-table-column label="科目" width="70" align="center">
+          <template #default="{ row }">
+            {{ row.subject ? '科目' + row.subject : '-' }}
+          </template>
+        </el-table-column>
         <el-table-column label="车辆" width="120">
           <template #default="{ row }">{{ row.plate_number || '-' }}</template>
         </el-table-column>
@@ -140,7 +151,7 @@ import { createSchedule, getMySchedules, cancelSchedule } from '@/api/schedule'
 
 const applyFormRef = ref()
 const applyForm = reactive({
-  vehicleId: null, venueId: null, licenseType: '', startTime: '', endTime: '',
+  vehicleId: null, venueId: null, licenseType: '', subject: null, startTime: '', endTime: '',
   maxStudents: 1, applyReason: '',
 })
 const applyRules = {
@@ -199,7 +210,7 @@ async function handleApply() {
   try {
     await createSchedule(applyForm)
     ElMessage.success('排班申请已提交，等待管理员审批')
-    applyForm.vehicleId = null; applyForm.venueId = null; applyForm.licenseType = ''
+    applyForm.vehicleId = null; applyForm.venueId = null; applyForm.licenseType = ''; applyForm.subject = null
     applyForm.startTime = ''; applyForm.endTime = ''; applyForm.maxStudents = 1; applyForm.applyReason = ''
     fetchSchedules()
   } catch (error) {

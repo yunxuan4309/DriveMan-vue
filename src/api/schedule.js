@@ -39,10 +39,7 @@ export function getPendingSchedules() {
 }
 
 // 审核排班
-export function auditSchedule(id, data) {
-  const params = new URLSearchParams()
-  params.append('status', data.status)
-  if (data.remark) params.append('remark', data.remark)
+export function auditSchedule(id, params) {
   return request.put(`/schedules/${id}/audit`, params, {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   })

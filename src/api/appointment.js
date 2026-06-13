@@ -76,6 +76,11 @@ export function getApprovedSchedules() {
   return request.get('/coach-portal/schedules/approved')
 }
 
+// 录入学时
+export function createTrainingRecord(data) {
+  return request.post('/coach-portal/training-records', data)
+}
+
 // 查看约课日历
 export function getAppointmentCalendar(params) {
   return request.get('/coach-portal/appointments/calendar', { params })

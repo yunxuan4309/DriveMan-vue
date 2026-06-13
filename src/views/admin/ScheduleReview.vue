@@ -72,6 +72,11 @@
         <el-table-column label="车型" width="70" align="center">
           <template #default="{ row }"><el-tag size="small">{{ row.license_type }}</el-tag></template>
         </el-table-column>
+        <el-table-column label="科目" width="70" align="center">
+          <template #default="{ row }">
+            {{ row.subject ? '科目' + row.subject : '-' }}
+          </template>
+        </el-table-column>
         <el-table-column label="开始时间" width="150" align="center">
           <template #default="{ row }">{{ formatDateTime(row.start_time) }}</template>
         </el-table-column>
