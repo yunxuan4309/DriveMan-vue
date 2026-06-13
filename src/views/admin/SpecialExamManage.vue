@@ -99,7 +99,7 @@
     </el-card>
 
     <!-- 录入/修改成绩对话框 -->
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px" destroy-on-close>
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="550px" destroy-on-close>
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
         <el-form-item label="学员ID" prop="studentId">
           <el-input-number v-model="form.studentId" :min="1" style="width: 100%" :disabled="isEdit" />
@@ -116,6 +116,17 @@
             <el-radio :label="1">理论</el-radio>
             <el-radio :label="2">实操</el-radio>
           </el-radio-group>
+        </el-form-item>
+        <el-form-item label="成绩截图" prop="fileId">
+          <el-select v-model="form.fileId" placeholder="请选择学员上传的成绩截图" clearable style="width: 100%"
+            :loading="fileListLoading" @focus="loadStudentFiles">
+            <el-option v-for="f in studentFileList" :key="f.id"
+              :label="`${f.fileName} (${formatFileSize(f.fileSize)} · ${formatDateTime(f.uploadTime)})`"
+              :value="f.id" />
+          </el-select>
+          <div style="color: #909399; font-size: 12px; margin-top: 4px">
+            仅显示该学员已上传的文件
+          </div>
         </el-form-item>
         <el-form-item label="成绩" prop="score">
           <el-input-number v-model="form.score" :min="0" :max="100" style="width: 100%" />
@@ -143,6 +154,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Plus, Search, Edit } from '@element-plus/icons-vue'
 import { getSpecialExamList, createSpecialExam, updateSpecialExam } from '@/api/specialExam'
+import { getUserFiles } from '@/api/file'
 
 // 搜索表单
 const searchForm = reactive({
@@ -171,10 +183,31 @@ const form = reactive({
   studentId: undefined,
   licenseType: '',
   subject: 1,
+  fileId: null,
   score: 80,
   passStatus: 1,
   examDate: '',
 })
+
+// 文件列表
+const studentFileList = ref([])
+const fileListLoading = ref(false)
+
+async function loadStudentFiles() {
+  if (!form.studentId) {
+    ElMessage.warning('请先输入学员ID')
+    return
+  }
+  fileListLoading.value = true
+  try {
+    const files = await getUserFiles(form.studentId)
+    studentFileList.value = Array.isArray(files) ? files : []
+  } catch {
+    studentFileList.value = []
+  } finally {
+    fileListLoading.value = false
+  }
+}
 
 // 表单校验规则
 const formRules = {
@@ -271,12 +304,21 @@ function resetForm() {
   form.studentId = undefined
   form.licenseType = ''
   form.subject = 1
+  form.fileId = null
   form.score = 80
   form.passStatus = 1
   form.examDate = ''
+  studentFileList.value = []
 }
 
 // 工具函数
+function formatFileSize(size) {
+  if (!size) return '-'
+  if (size < 1024) return size + ' B'
+  if (size < 1024 * 1024) return (size / 1024).toFixed(1) + ' KB'
+  return (size / (1024 * 1024)).toFixed(1) + ' MB'
+}
+
 function formatDateTime(dateTime) {
   if (!dateTime) return '-'
   const date = new Date(dateTime)

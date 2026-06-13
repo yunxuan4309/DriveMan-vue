@@ -127,6 +127,7 @@
           <el-select v-model="createForm.bizType" placeholder="选择业务类型" style="width: 100%">
             <el-option label="体检报告" value="physical_exam" />
             <el-option label="报名材料" value="enrollment" />
+            <el-option label="成绩截图" value="exam_score" />
             <el-option label="用户资料" value="user_profile" />
             <el-option label="教练资质" value="coach_qualification" />
             <el-option label="增驾/准教车型变更" value="license_upgrade" />
@@ -135,6 +136,7 @@
         <el-form-item label="文件分类">
           <el-select v-model="createForm.fileType" placeholder="选择文件分类" style="width: 100%">
             <el-option label="体检表" value="physical_exam" />
+            <el-option label="成绩截图" value="exam_score" />
             <el-option label="身份证正面" value="id_card_front" />
             <el-option label="身份证反面" value="id_card_back" />
             <el-option label="资质证书" value="coach_qualification" />

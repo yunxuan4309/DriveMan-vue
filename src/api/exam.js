@@ -49,8 +49,8 @@ export function auditExamRegistration(id, pass) {
 }
 
 // 录入考试成绩
-export function scoreExamRegistration(id, score) {
-  return request.put(`/exam-registrations/${id}/score?score=${score}`)
+export function scoreExamRegistration(id, score, fileId) {
+  return request.put(`/exam-registrations/${id}/score?score=${score}&fileId=${fileId}`)
 }
 
 // 查询所有考试报名记录

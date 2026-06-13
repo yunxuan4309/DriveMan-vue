@@ -121,7 +121,7 @@
     </el-dialog>
 
     <!-- 录入成绩对话框 -->
-    <el-dialog v-model="scoreDialogVisible" title="录入成绩" width="400px" destroy-on-close>
+    <el-dialog v-model="scoreDialogVisible" title="录入成绩" width="520px" destroy-on-close>
       <div class="audit-info">
         <p><strong>学员：</strong>{{ scoreForm.studentName }}</p>
         <p><strong>科目：</strong>科目{{ scoreForm.subject }}</p>
@@ -129,6 +129,17 @@
         <p><strong>考试地点：</strong>{{ scoreForm.location || '-' }}</p>
       </div>
       <el-form :model="scoreForm" label-width="100px" class="score-form">
+        <el-form-item label="成绩截图" prop="fileId">
+          <el-select v-model="scoreForm.fileId" placeholder="请选择学员上传的成绩截图" clearable style="width: 100%"
+            :loading="fileListLoading">
+            <el-option v-for="f in studentFileList" :key="f.id"
+              :label="`${f.fileName} (${formatFileSize(f.fileSize)} · ${formatDateTime(f.uploadTime)})`"
+              :value="f.id" />
+          </el-select>
+          <div style="color: #909399; font-size: 12px; margin-top: 4px">
+            仅显示该学员已上传的文件
+          </div>
+        </el-form-item>
         <el-form-item label="考试成绩" prop="score">
           <el-input-number v-model="scoreForm.score" :min="0" :max="100" :step="1" />
           <span style="margin-left: 12px; font-size: 13px; color: #909399">
@@ -146,7 +157,7 @@
       </el-form>
       <template #footer>
         <el-button @click="scoreDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleScoreSubmit" :loading="scoreLoading">确定录入</el-button>
+        <el-button type="primary" @click="handleScoreSubmit" :loading="scoreLoading" :disabled="!scoreForm.fileId">确定录入</el-button>
       </template>
     </el-dialog>
   </div>
@@ -157,6 +168,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Check, Close } from '@element-plus/icons-vue'
 import { getExamRegistrationList, auditExamRegistration, scoreExamRegistration } from '@/api/exam'
+import { getUserFiles } from '@/api/file'
 
 const regList = ref([])
 const loading = ref(false)
@@ -182,9 +194,12 @@ const scoreForm = reactive({
   subject: '',
   examDate: '',
   location: '',
+  fileId: null,
   score: 90,
 })
 const scoreLoading = ref(false)
+const studentFileList = ref([])
+const fileListLoading = ref(false)
 
 async function fetchList() {
   loading.value = true
@@ -240,14 +255,29 @@ function handleScore(row) {
   scoreForm.subject = row.subject
   scoreForm.examDate = row.examDate
   scoreForm.location = row.location
+  scoreForm.fileId = null
   scoreForm.score = 90
+  studentFileList.value = []
   scoreDialogVisible.value = true
+  // 加载该学员的文件列表
+  fileListLoading.value = true
+  getUserFiles(row.studentId).then(files => {
+    studentFileList.value = Array.isArray(files) ? files : []
+  }).catch(() => {
+    studentFileList.value = []
+  }).finally(() => {
+    fileListLoading.value = false
+  })
 }
 
 async function handleScoreSubmit() {
+  if (!scoreForm.fileId) {
+    ElMessage.warning('请选择成绩截图文件')
+    return
+  }
   scoreLoading.value = true
   try {
-    await scoreExamRegistration(scoreForm.id, scoreForm.score)
+    await scoreExamRegistration(scoreForm.id, scoreForm.score, scoreForm.fileId)
     ElMessage.success('成绩录入成功')
     scoreDialogVisible.value = false
     fetchList()
@@ -266,6 +296,13 @@ function getStatusTagType(status) {
 function getStatusText(status) {
   const map = { 0: '待审核', 1: '审核通过', 2: '审核不通过', 3: '已考试' }
   return map[status] || '未知'
+}
+
+function formatFileSize(size) {
+  if (!size) return '-'
+  if (size < 1024) return size + ' B'
+  if (size < 1024 * 1024) return (size / 1024).toFixed(1) + ' KB'
+  return (size / (1024 * 1024)).toFixed(1) + ' MB'
 }
 
 function formatDateTime(dateTime) {
