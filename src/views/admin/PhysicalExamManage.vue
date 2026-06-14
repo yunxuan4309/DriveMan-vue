@@ -34,6 +34,12 @@
             {{ row.studentName || '-' }}
           </template>
         </el-table-column>
+        <el-table-column label="车型" width="70" align="center">
+          <template #default="{ row }">
+            <el-tag v-if="row.licenseType" size="small">{{ row.licenseType }}</el-tag>
+            <span v-else class="text-gray">-</span>
+          </template>
+        </el-table-column>
         <el-table-column label="体检地点" min-width="160" show-overflow-tooltip>
           <template #default="{ row }">
             {{ row.location || '-' }}
@@ -96,6 +102,10 @@
     <!-- 审核对话框 -->
     <el-dialog v-model="auditDialogVisible" title="审核体检申请" width="450px" destroy-on-close>
       <el-form :model="auditForm" label-width="80px">
+        <el-form-item label="关联车型">
+          <el-tag v-if="currentRow?.licenseType" size="small">{{ currentRow.licenseType }}</el-tag>
+          <span v-else class="text-gray">-</span>
+        </el-form-item>
         <el-form-item label="体检地点">
           <span>{{ currentRow?.location }}</span>
         </el-form-item>
@@ -121,6 +131,10 @@
     <!-- 录入体检结果对话框 -->
     <el-dialog v-model="resultDialogVisible" title="录入体检结果" width="520px" destroy-on-close>
       <el-form :model="resultForm" label-width="100px">
+        <el-form-item label="关联车型">
+          <el-tag v-if="currentRow?.licenseType" size="small">{{ currentRow.licenseType }}</el-tag>
+          <span v-else class="text-gray">-</span>
+        </el-form-item>
         <el-form-item label="体检地点">
           <span>{{ currentRow?.location }}</span>
         </el-form-item>

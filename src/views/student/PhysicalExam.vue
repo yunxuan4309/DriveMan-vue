@@ -16,6 +16,19 @@
             />
           </el-select>
         </el-form-item>
+        <el-form-item label="关联车型" prop="licenseType">
+          <el-select v-model="applyForm.licenseType" placeholder="默认为您当前的报考车型" clearable style="width: 200px">
+            <el-option label="C1" value="C1" />
+            <el-option label="C2" value="C2" />
+            <el-option label="B1" value="B1" />
+            <el-option label="B2" value="B2" />
+            <el-option label="A1" value="A1" />
+            <el-option label="A3" value="A3" />
+          </el-select>
+          <div style="color: #909399; font-size: 12px; margin-top: 4px">
+            增驾场景请选择目标车型；留空则默认当前报考车型
+          </div>
+        </el-form-item>
         <el-form-item label="预约日期" prop="examDate">
           <el-date-picker
             v-model="applyForm.examDate"
@@ -43,6 +56,11 @@
 
       <el-table :data="recordList" v-loading="loading" border stripe>
         <el-table-column type="index" label="序号" width="60" align="center" />
+        <el-table-column label="关联车型" width="80" align="center">
+          <template #default="{ row }">
+            {{ row.licenseType || '-' }}
+          </template>
+        </el-table-column>
         <el-table-column label="体检地点" min-width="160" show-overflow-tooltip>
           <template #default="{ row }">
             {{ row.location || '-' }}
@@ -96,7 +114,7 @@ const venueOptions = ref([])
 
 // 申请表单
 const applyFormRef = ref()
-const applyForm = reactive({ venueId: null, examDate: '' })
+const applyForm = reactive({ venueId: null, examDate: '', licenseType: '' })
 const applyLoading = ref(false)
 const applyRules = {
   venueId: [{ required: true, message: '请选择体检地点', trigger: 'change' }],
@@ -132,10 +150,15 @@ async function handleApply() {
   if (!valid) return
   applyLoading.value = true
   try {
-    await applyPhysicalExam({ venueId: applyForm.venueId, examDate: applyForm.examDate })
+    await applyPhysicalExam({
+      venueId: applyForm.venueId,
+      examDate: applyForm.examDate,
+      licenseType: applyForm.licenseType || undefined,
+    })
     ElMessage.success('体检申请已提交')
     applyForm.venueId = null
     applyForm.examDate = ''
+    applyForm.licenseType = ''
     fetchList()
   } catch (error) {
     console.error('提交失败:', error)

@@ -75,6 +75,11 @@
             <el-tag v-else type="info" size="small">在学中</el-tag>
           </template>
         </el-table-column>
+        <el-table-column label="领证日期" width="120" align="center">
+          <template #default="{ row }">
+            {{ formatDateOnly(row.licenseObtainedDate) }}
+          </template>
+        </el-table-column>
         <el-table-column prop="status" label="状态" width="100" align="center">
           <template #default="{ row }">
             <el-tag :type="getStatusType(row.status)">{{ getStatusLabel(row.status) }}</el-tag>
@@ -181,6 +186,9 @@
         </el-descriptions-item>
         <el-descriptions-item label="角色">
           <el-tag type="success">学员</el-tag>
+        </el-descriptions-item>
+        <el-descriptions-item label="领证日期">
+          {{ formatDateOnly(currentStudent.licenseObtainedDate) }}
         </el-descriptions-item>
         <el-descriptions-item label="地址" :span="2">{{ currentStudent.address }}</el-descriptions-item>
         <el-descriptions-item label="创建时间">{{ formatDateTime(currentStudent.createTime) }}</el-descriptions-item>
@@ -471,6 +479,16 @@ function formatDateTime(dateTime) {
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
+  })
+}
+
+function formatDateOnly(dateTime) {
+  if (!dateTime) return '-'
+  const date = new Date(dateTime)
+  return date.toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
   })
 }
 

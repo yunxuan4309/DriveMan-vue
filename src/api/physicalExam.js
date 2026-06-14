@@ -4,11 +4,12 @@ import request from './request'
  * 体检申请管理 API
  */
 
-// 学员提交体检申请
+// 学员提交体检申请（licenseType 可选，用于增驾场景指定目标车型）
 export function applyPhysicalExam(data) {
   const params = new URLSearchParams()
   params.append('venueId', data.venueId)
   params.append('examDate', data.examDate)
+  if (data.licenseType) params.append('licenseType', data.licenseType)
   return request.post('/physical-exams/apply', params, {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   })

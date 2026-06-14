@@ -3,7 +3,7 @@
     <!-- 欢迎区域 -->
     <el-card shadow="never" class="welcome-card">
       <div class="welcome-content">
-        <el-avatar :size="56" :icon="UserFilled" />
+        <el-avatar :size="56" :icon="UserFilled" style="cursor: pointer" @click="$router.push('/profile')" />
         <div>
           <h2>欢迎，{{ userStore.roleLabel }}</h2>
           <p class="user-info">

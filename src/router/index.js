@@ -19,6 +19,12 @@ const routes = [
     component: () => import('@/views/About.vue'),
     meta: { title: '关于' },
   },
+  {
+    path: '/profile',
+    name: 'Profile',
+    component: () => import('@/views/Profile.vue'),
+    meta: { title: '个人信息' },
+  },
   // ── 学员功能路由 ─────────────────────────────────────
   {
     path: '/student',
