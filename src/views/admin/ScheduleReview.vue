@@ -36,6 +36,7 @@
             <el-option label="已拒绝" :value="2" />
             <el-option label="已完成" :value="3" />
             <el-option label="已取消" :value="4" />
+            <el-option label="申请取消中" :value="5" />
           </el-select>
         </el-form-item>
         <el-form-item label="开始时间">
@@ -97,11 +98,13 @@
         <el-table-column label="审核备注" min-width="120" show-overflow-tooltip>
           <template #default="{ row }">{{ row.audit_remark || '-' }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="140" fixed="right" align="center">
+        <el-table-column label="操作" width="200" fixed="right" align="center">
           <template #default="{ row }">
             <el-button v-if="row.status === 0" type="success" size="small" @click="handleAudit(row, 1)">通过</el-button>
             <el-button v-if="row.status === 0" type="danger" size="small" @click="handleAudit(row, 2)">拒绝</el-button>
-            <span v-else class="no-action">-</span>
+            <el-button v-if="row.status === 5" type="success" size="small" @click="handleCancelAudit(row, true)">同意取消</el-button>
+            <el-button v-if="row.status === 5" type="danger" size="small" @click="handleCancelAudit(row, false)">拒绝取消</el-button>
+            <span v-if="row.status !== 0 && row.status !== 5" class="no-action">-</span>
           </template>
         </el-table-column>
       </el-table>
@@ -121,21 +124,21 @@
       <el-empty v-if="!loading && scheduleList.length === 0" description="暂无数据" style="margin-top: 40px" />
     </el-card>
 
-    <!-- 审核对话框 -->
-    <el-dialog v-model="dialogVisible" :title="auditForm.status === 1 ? '通过排班' : '拒绝排班'" width="450px" destroy-on-close>
+    <!-- 审核对话框（新建审核 / 取消审核 通用） -->
+    <el-dialog v-model="dialogVisible" :title="getDialogTitle()" width="450px" destroy-on-close>
       <el-form :model="auditForm" label-width="80px">
         <el-form-item label="审核结果">
-          <el-tag :type="auditForm.status === 1 ? 'success' : 'danger'">
-            {{ auditForm.status === 1 ? '通过' : '拒绝' }}
+          <el-tag :type="auditForm.approved ? 'success' : 'danger'">
+            {{ getResultLabel() }}
           </el-tag>
         </el-form-item>
         <el-form-item label="备注说明">
-          <el-input v-model="auditForm.remark" type="textarea" rows="3" :placeholder="auditForm.status === 2 ? '请填写拒绝原因' : '可选备注'" />
+          <el-input v-model="auditForm.remark" type="textarea" rows="3" :placeholder="auditForm.approved ? '可选备注' : '请填写拒绝原因'" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button :type="auditForm.status === 1 ? 'success' : 'danger'" @click="handleAuditSubmit" :loading="auditLoading">确定</el-button>
+        <el-button @click="dialogVisible = false">关闭</el-button>
+        <el-button :type="auditForm.approved ? 'success' : 'danger'" @click="handleAuditSubmit" :loading="auditLoading">确定</el-button>
       </template>
     </el-dialog>
   </div>
@@ -145,7 +148,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Refresh, Search } from '@element-plus/icons-vue'
-import { getAllSchedules, auditSchedule } from '@/api/schedule'
+import { getAllSchedules, auditSchedule, cancelAuditSchedule } from '@/api/schedule'
 
 const scheduleList = ref([])
 const loading = ref(false)
@@ -157,8 +160,10 @@ const searchForm = reactive({
 })
 
 const currentId = ref(null)
+// auditMode: 'create'=新建排班审核, 'cancel'=取消申请审核
+const auditMode = ref('create')
 const dialogVisible = ref(false)
-const auditForm = reactive({ status: 1, remark: '' })
+const auditForm = reactive({ approved: true, remark: '' })
 const auditLoading = ref(false)
 
 async function fetchList() {
@@ -196,24 +201,41 @@ function handleReset() {
 }
 
 function handleAudit(row, status) {
+  auditMode.value = 'create'
   currentId.value = row.id
-  auditForm.status = status
+  auditForm.approved = status === 1
+  auditForm.remark = ''
+  dialogVisible.value = true
+}
+
+// 审核取消申请
+function handleCancelAudit(row, approved) {
+  auditMode.value = 'cancel'
+  currentId.value = row.id
+  auditForm.approved = approved
   auditForm.remark = ''
   dialogVisible.value = true
 }
 
 async function handleAuditSubmit() {
-  if (auditForm.status === 2 && !auditForm.remark) {
+  if (!auditForm.approved && !auditForm.remark) {
     ElMessage.warning('拒绝时请填写原因')
     return
   }
   auditLoading.value = true
   try {
-    const params = new URLSearchParams()
-    params.append('status', auditForm.status)
-    if (auditForm.remark) params.append('remark', auditForm.remark)
-    await auditSchedule(currentId.value, params)
-    ElMessage.success(auditForm.status === 1 ? '已通过' : '已拒绝')
+    if (auditMode.value === 'cancel') {
+      // 取消审核
+      await cancelAuditSchedule(currentId.value, auditForm.approved, auditForm.remark)
+      ElMessage.success(auditForm.approved ? '已同意取消，关联约课已自动取消' : '已拒绝取消，排班恢复生效')
+    } else {
+      // 新建审核
+      const params = new URLSearchParams()
+      params.append('status', auditForm.approved ? 1 : 2)
+      if (auditForm.remark) params.append('remark', auditForm.remark)
+      await auditSchedule(currentId.value, params)
+      ElMessage.success(auditForm.approved ? '已通过' : '已拒绝')
+    }
     dialogVisible.value = false
     fetchList()
   } catch (error) {
@@ -223,12 +245,26 @@ async function handleAuditSubmit() {
   }
 }
 
+function getDialogTitle() {
+  if (auditMode.value === 'cancel') {
+    return auditForm.approved ? '同意取消排班' : '拒绝取消申请'
+  }
+  return auditForm.approved ? '通过排班' : '拒绝排班'
+}
+
+function getResultLabel() {
+  if (auditMode.value === 'cancel') {
+    return auditForm.approved ? '同意取消' : '拒绝取消'
+  }
+  return auditForm.approved ? '通过' : '拒绝'
+}
+
 function getStatusTag(status) {
-  return { 0: 'info', 1: 'success', 2: 'danger', 3: '', 4: 'warning' }[status] || 'info'
+  return { 0: 'info', 1: 'success', 2: 'danger', 3: '', 4: 'warning', 5: 'danger' }[status] || 'info'
 }
 
 function getStatusText(status) {
-  return { 0: '待审核', 1: '已通过', 2: '已拒绝', 3: '已完成', 4: '已取消' }[status] || '未知'
+  return { 0: '待审核', 1: '已通过', 2: '已拒绝', 3: '已完成', 4: '已取消', 5: '申请取消中' }[status] || '未知'
 }
 
 function formatDateTime(dt) {

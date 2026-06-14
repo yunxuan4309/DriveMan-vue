@@ -72,6 +72,7 @@
             <el-option label="已拒绝" :value="2" />
             <el-option label="已完成" :value="3" />
             <el-option label="已取消" :value="4" />
+            <el-option label="申请取消中" :value="5" />
           </el-select>
         </el-form-item>
         <el-form-item label="开始时间">
@@ -138,12 +139,39 @@
 
       <el-empty v-if="!scheduleLoading && scheduleList.length === 0" description="暂无排班记录" style="margin-top: 30px" />
     </el-card>
+
+    <!-- 取消排班对话框 -->
+    <el-dialog v-model="cancelDialogVisible" title="取消排班" width="450px" destroy-on-close>
+      <div v-if="cancelTarget">
+        <p style="margin-bottom: 12px; color: #606266;">
+          <template v-if="cancelTarget.status === 1 && cancelTarget.booked_count > 0">
+            <el-tag type="warning" size="small">需管理员审核</el-tag>
+            该排班已有 <b>{{ cancelTarget.booked_count }}</b> 名学员预约，取消申请将提交管理员审核。
+          </template>
+          <template v-else>
+            确认取消该排班？取消后将立即生效。
+          </template>
+        </p>
+        <el-form label-width="80px">
+          <el-form-item label="取消原因">
+            <el-input v-model="cancelReason" type="textarea" rows="3"
+              :placeholder="cancelTarget.status === 1 && cancelTarget.booked_count > 0 ? '请填写取消原因（必填，将提交管理员审核）' : '请输入取消原因（可选）'" />
+          </el-form-item>
+        </el-form>
+      </div>
+      <template #footer>
+        <el-button @click="cancelDialogVisible = false">关闭</el-button>
+        <el-button type="danger" @click="handleCancelSubmit" :loading="cancelLoading">
+          {{ cancelTarget && cancelTarget.status === 1 && cancelTarget.booked_count > 0 ? '提交取消申请' : '确定取消' }}
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { Refresh } from '@element-plus/icons-vue'
 import { getAvailableVehicles } from '@/api/vehicle'
 import { getVenueList } from '@/api/venue'
@@ -255,19 +283,37 @@ function resetFilter() {
   fetchSchedules()
 }
 
-async function handleCancel(row) {
+// 取消排班 —— 弹出对话框收集取消原因
+const cancelDialogVisible = ref(false)
+const cancelTarget = ref(null)
+const cancelReason = ref('')
+const cancelLoading = ref(false)
+
+function handleCancel(row) {
+  cancelTarget.value = row
+  cancelReason.value = ''
+  cancelDialogVisible.value = true
+}
+
+async function handleCancelSubmit() {
+  const row = cancelTarget.value
+  const needAudit = row.status === 1 && row.booked_count > 0
+
+  cancelLoading.value = true
   try {
-    await ElMessageBox.confirm('确定取消该排班？', '确认', { type: 'warning' })
-    await cancelSchedule(row.id)
-    ElMessage.success('已取消')
+    await cancelSchedule(row.id, cancelReason.value)
+    ElMessage.success(needAudit ? '取消申请已提交，等待管理员审核' : '已取消')
+    cancelDialogVisible.value = false
     fetchSchedules()
   } catch (error) {
-    if (error !== 'cancel') console.error('取消失败:', error)
+    console.error('取消失败:', error)
+  } finally {
+    cancelLoading.value = false
   }
 }
 
-function getStatusTag(s) { return { 0: 'warning', 1: 'success', 2: 'danger', 3: 'info', 4: 'info' }[s] || 'info' }
-function getStatusText(s) { return { 0: '待审核', 1: '已通过', 2: '已拒绝', 3: '已完成', 4: '已取消' }[s] || '未知' }
+function getStatusTag(s) { return { 0: 'warning', 1: 'success', 2: 'danger', 3: 'info', 4: 'info', 5: 'danger' }[s] || 'info' }
+function getStatusText(s) { return { 0: '待审核', 1: '已通过', 2: '已拒绝', 3: '已完成', 4: '已取消', 5: '申请取消中' }[s] || '未知' }
 function formatDateTime(dt) { return dt ? new Date(dt).toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-' }
 
 onMounted(fetchSchedules)

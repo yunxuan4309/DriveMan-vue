@@ -21,9 +21,9 @@ export function getMyPendingSchedules() {
   return request.get('/coach-portal/schedules/pending')
 }
 
-// 取消排班
-export function cancelSchedule(id) {
-  return request.put(`/coach-portal/schedules/${id}/cancel`)
+// 取消排班（教练端），reason 为取消原因
+export function cancelSchedule(id, reason) {
+  return request.put(`/coach-portal/schedules/${id}/cancel`, null, { params: { reason } })
 }
 
 // ── 管理员端 ──────────────────────────────────────────
@@ -41,6 +41,16 @@ export function getPendingSchedules() {
 // 审核排班
 export function auditSchedule(id, params) {
   return request.put(`/schedules/${id}/audit`, params, {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  })
+}
+
+// 审核取消申请（管理员端），approved=true 通过/false 拒绝
+export function cancelAuditSchedule(id, approved, remark) {
+  const params = new URLSearchParams()
+  params.append('approved', approved)
+  if (remark) params.append('remark', remark)
+  return request.put(`/schedules/${id}/cancel-audit`, params, {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   })
 }
