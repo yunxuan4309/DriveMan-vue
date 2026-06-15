@@ -24,6 +24,10 @@
               </el-tag>
               <span class="sep">|</span>
               <span>报考 {{ profile.basic?.licenseType || '-' }}</span>
+              <template v-if="profile.progress?.hasActiveUpgrade">
+                <span class="sep">|</span>
+                <el-tag size="small" type="warning">增驾中 → {{ profile.progress.upgradeTargetLicense }}</el-tag>
+              </template>
               <span v-if="profile.progress?.allPassed" class="sep">|</span>
               <el-tag v-if="profile.progress?.allPassed" size="small" type="success">已结业</el-tag>
             </p>
@@ -40,9 +44,22 @@
           <el-descriptions-item label="身份证号">{{ profile.basic?.idCard }}</el-descriptions-item>
           <el-descriptions-item label="地址">{{ profile.basic?.address || '-' }}</el-descriptions-item>
           <el-descriptions-item label="入学时间">{{ fmt(profile.basic?.enrollDate) }}</el-descriptions-item>
-          <el-descriptions-item label="领证日期">
-            <span v-if="profile.basic?.licenseObtainedDate">{{ fmt(profile.basic.licenseObtainedDate) }}</span>
-            <span v-else class="text-gray">-</span>
+          <el-descriptions-item label="当前驾照">
+            <span>{{ profile.basic?.licenseType || '-' }}</span>
+            <el-tag v-if="profile.basic?.licenseObtainedDate" size="small" type="success" style="margin-left: 6px">
+              已获取 {{ fmtDate(profile.basic.licenseObtainedDate) }}
+            </el-tag>
+          </el-descriptions-item>
+          <el-descriptions-item v-if="profile.basic?.existingLicense" label="已有驾照">
+            {{ profile.basic.existingLicense }}
+            <span v-if="profile.basic.existingLicenseYears"> ({{ profile.basic.existingLicenseYears }}年)</span>
+            <el-button v-if="profile.basic.existingLicenseFileId" link type="primary" size="small" @click="previewFile(profile.basic.existingLicenseFileId)" style="margin-left: 4px">
+              查看证明
+            </el-button>
+          </el-descriptions-item>
+          <el-descriptions-item v-if="profile.progress?.hasActiveUpgrade" label="增驾目标">
+            <el-tag type="warning" size="small">{{ profile.progress.upgradeTargetLicense }}</el-tag>
+            <span style="margin-left: 6px; color: #909399; font-size: 13px">考试进行中</span>
           </el-descriptions-item>
         </el-descriptions>
       </el-card>
@@ -89,11 +106,16 @@
         </el-descriptions>
         <div v-if="profile.progress?.passedSubjects?.length" style="margin-top: 12px">
           <p class="sub-title">已通过科目</p>
-          <el-tag
-            v-for="s in profile.progress.passedSubjects" :key="s.subject"
-            type="success" size="small" style="margin: 2px">
-            {{ s.description || '科目' + s.subject }} ({{ s.score }}分)
-          </el-tag>
+          <template v-for="s in profile.progress.passedSubjects" :key="s.subject">
+            <el-tag v-if="s.status === 'skipped'"
+              type="success" size="small" style="margin: 2px" effect="plain">
+              {{ s.description || '科目' + s.subject }}（免考）
+            </el-tag>
+            <el-tag v-else
+              type="success" size="small" style="margin: 2px">
+              {{ s.description || '科目' + s.subject }} ({{ s.score }}分)
+            </el-tag>
+          </template>
         </div>
       </el-card>
 
@@ -210,9 +232,19 @@ function fmt(dt) {
   return new Date(dt).toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
 }
 
+function fmtDate(dt) {
+  if (!dt) return '-'
+  return new Date(dt).toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })
+}
+
 function fmtAmount(n) {
   if (n === undefined || n === null) return '0.00'
   return Number(n).toFixed(2)
+}
+
+function previewFile(fileId) {
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:9500'
+  window.open(baseUrl + '/files/' + fileId + '/download?preview=true', '_blank')
 }
 
 function statusTag(s) {

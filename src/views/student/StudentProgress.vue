@@ -23,6 +23,16 @@
             style="margin-bottom: 20px"
           />
 
+          <!-- 增驾进度提示 -->
+          <el-alert
+            v-if="progress.hasActiveUpgrade && progress.upgradeTargetLicense"
+            :title="`正在进行增驾（${progress.licenseType}）学习，以下为目标准驾车型 ${progress.upgradeTargetLicense} 的学习进度`"
+            type="warning"
+            show-icon
+            :closable="false"
+            style="margin-bottom: 20px"
+          />
+
           <el-descriptions :column="3" border style="margin-bottom: 20px">
             <el-descriptions-item label="学员">{{ progress.realName }}</el-descriptions-item>
             <el-descriptions-item label="报名车型">
@@ -115,12 +125,12 @@ async function fetchProgress() {
 }
 
 function getSubjectStatusTag(status) {
-  const map = { passed: 'success', learning: 'primary', failed: 'danger', pending: 'info' }
+  const map = { passed: 'success', learning: 'primary', ready: 'warning', locked: 'info', failed: 'danger', pending: 'info', skipped: 'success' }
   return map[status] || 'info'
 }
 
 function getSubjectStatusText(status) {
-  const map = { passed: '已通过', learning: '学习中', failed: '未通过', pending: '未开始' }
+  const map = { passed: '已通过', learning: '学习中', ready: '可考试', locked: '未解锁', failed: '未通过', pending: '未开始', skipped: '免考' }
   return map[status] || '未知'
 }
 

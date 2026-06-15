@@ -256,6 +256,7 @@ const registerRules = {
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
     { min: 3, max: 20, message: '用户名长度 3-20 个字符', trigger: 'blur' },
+    { pattern: /^[a-zA-Z0-9_-]+$/, message: '用户名不能包含中文或特殊字符', trigger: 'blur' },
   ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
@@ -328,6 +329,7 @@ const coachRegRules = {
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
     { min: 3, max: 20, message: '用户名长度 3-20 个字符', trigger: 'blur' },
+    { pattern: /^[a-zA-Z0-9_-]+$/, message: '用户名不能包含中文或特殊字符', trigger: 'blur' },
   ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },

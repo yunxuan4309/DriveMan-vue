@@ -77,6 +77,15 @@
             {{ formatDateOnly(row.licenseObtainedDate) }}
           </template>
         </el-table-column>
+        <el-table-column label="已有驾照" width="140" align="center">
+          <template #default="{ row }">
+            <template v-if="row.existingLicense">
+              {{ row.existingLicense }}
+              <span v-if="row.existingLicenseYears">({{ row.existingLicenseYears }}年)</span>
+            </template>
+            <span v-else class="text-gray">-</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="status" label="状态" width="100" align="center">
           <template #default="{ row }">
             <el-tag :type="getStatusType(row.status)">{{ getStatusLabel(row.status) }}</el-tag>
@@ -157,10 +166,67 @@
             <el-option v-for="t in licenseTypes" :key="t" :label="t" :value="t" />
           </el-select>
         </el-form-item>
+
+        <el-divider content-position="left">外校学员已有驾照信息（选填）</el-divider>
+        <el-form-item label="已有驾照">
+          <el-select v-model="form.existingLicense" placeholder="已有驾照类型" clearable style="width: 100%">
+            <el-option v-for="t in licenseTypes" :key="t" :label="t" :value="t" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="驾龄(年)">
+          <el-input-number v-model="form.existingLicenseYears" :min="0" :max="50" :step="0.5" style="width: 100%" />
+        </el-form-item>
+        <el-form-item label="证明文件">
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
+            <el-upload
+              action=""
+              :show-file-list="false"
+              :before-upload="handleExistingLicenseUpload"
+            >
+              <el-button size="small" type="primary">本地上传</el-button>
+            </el-upload>
+            <el-button size="small" @click="openFilePicker" :disabled="!form.userId">从学员文件选择</el-button>
+            <span v-if="form.existingLicenseFileId">
+              <el-tag type="success" closable @close="form.existingLicenseFileId = undefined">
+                已选文件 #{{ form.existingLicenseFileId }}
+              </el-tag>
+              <el-button link type="primary" size="small" @click="previewFile(form.existingLicenseFileId)">
+                预览
+              </el-button>
+            </span>
+          </div>
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
         <el-button type="primary" @click="handleSubmit" :loading="submitLoading">确定</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 学员文件选择对话框 -->
+    <el-dialog v-model="filePickerVisible" title="选择学员已有证明文件" width="600px" destroy-on-close>
+      <div v-if="studentFiles.length === 0" style="text-align: center; padding: 32px">
+        <el-empty description="该学员暂无已上传的证明文件，请使用本地上传" />
+      </div>
+      <el-table v-else :data="studentFiles" border stripe @row-click="selectStudentFile" style="cursor: pointer">
+        <el-table-column label="文件名" min-width="200">
+          <template #default="{ row }">
+            {{ row.originalName || row.fileName || '未知文件' }}
+          </template>
+        </el-table-column>
+        <el-table-column label="上传时间" width="160">
+          <template #default="{ row }">
+            {{ formatDateTime(row.createTime) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="100" align="center">
+          <template #default="{ row }">
+            <el-button link type="primary" size="small" @click.stop="previewFile(row.id)">预览</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <template #footer>
+        <el-button @click="filePickerVisible = false">取消</el-button>
       </template>
     </el-dialog>
 
@@ -181,6 +247,18 @@
         </el-descriptions-item>
         <el-descriptions-item label="领证日期">
           {{ formatDateOnly(currentStudent.licenseObtainedDate) }}
+        </el-descriptions-item>
+        <el-descriptions-item label="已有驾照">
+          <template v-if="currentStudent.existingLicense">
+            {{ currentStudent.existingLicense }}
+            <span v-if="currentStudent.existingLicenseYears">({{ currentStudent.existingLicenseYears }}年)</span>
+          </template>
+          <span v-else>-</span>
+        </el-descriptions-item>
+        <el-descriptions-item label="驾照证明" v-if="currentStudent.existingLicenseFileId">
+          <el-button link type="primary" size="small" @click="previewFile(currentStudent.existingLicenseFileId)">
+            查看文件
+          </el-button>
         </el-descriptions-item>
         <el-descriptions-item label="地址" :span="2">{{ currentStudent.address }}</el-descriptions-item>
         <el-descriptions-item label="创建时间">{{ formatDateTime(currentStudent.createTime) }}</el-descriptions-item>
@@ -223,6 +301,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Search, View, Edit, Delete, Check } from '@element-plus/icons-vue'
 import { getStudentList, createStudent, updateStudent, deleteStudent, auditRegistration } from '@/api/student'
+import { uploadFile, getUserFiles } from '@/api/file'
 
 // 搜索表单
 const searchForm = reactive({
@@ -266,6 +345,9 @@ const form = reactive({
   phone: '',
   address: '',
   licenseType: '',
+  existingLicense: '',
+  existingLicenseYears: null,
+  existingLicenseFileId: undefined,
 })
 
 // 表单校验规则
@@ -279,6 +361,10 @@ const formRules = {
 // 查看详情
 const viewDialogVisible = ref(false)
 const currentStudent = ref({})
+
+// 文件选择
+const filePickerVisible = ref(false)
+const studentFiles = ref([])
 
 // 审核
 const auditDialogVisible = ref(false)
@@ -416,6 +502,42 @@ async function handleAuditSubmit() {
   }
 }
 
+// 上传已有驾照证明文件
+async function handleExistingLicenseUpload(file) {
+  try {
+    const res = await uploadFile(form.userId, file, 'existing_license', 'existing_license')
+    form.existingLicenseFileId = res.id
+    ElMessage.success('证明文件上传成功')
+  } catch (e) {
+    console.error('上传失败:', e)
+  }
+  return false // 阻止 el-upload 默认上传
+}
+
+// 预览证明文件
+function previewFile(fileId) {
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:9500'
+  window.open(baseUrl + '/files/' + fileId + '/download?preview=true', '_blank')
+}
+
+// 打开学员文件选择器
+async function openFilePicker() {
+  try {
+    const files = await getUserFiles(form.userId)
+    studentFiles.value = files
+    filePickerVisible.value = true
+  } catch (e) {
+    console.error('获取学员文件失败:', e)
+  }
+}
+
+// 选择学员文件
+function selectStudentFile(row) {
+  form.existingLicenseFileId = row.id
+  filePickerVisible.value = false
+  ElMessage.success('已选择文件')
+}
+
 // 提交表单
 async function handleSubmit() {
   const valid = await formRef.value?.validate().catch(() => false)
@@ -451,6 +573,9 @@ function resetForm() {
   form.phone = ''
   form.address = ''
   form.licenseType = ''
+  form.existingLicense = ''
+  form.existingLicenseYears = null
+  form.existingLicenseFileId = undefined
 }
 
 // 工具函数
