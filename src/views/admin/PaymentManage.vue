@@ -19,7 +19,7 @@
         </el-form-item>
         <el-form-item label="车型">
           <el-select v-model="outstandingSearchForm.licenseType" placeholder="全部" clearable style="width: 100px" @change="searchOutstanding">
-            <el-option v-for="t in licenseTypes" :key="t" :label="t" :value="t" />
+            <el-option v-for="lt in LICENSE_TYPES" :key="lt.value" :label="lt.label" :value="lt.value" />
           </el-select>
         </el-form-item>
         <el-form-item label="业务类型">
@@ -329,7 +329,7 @@ const outstandingSearchForm = reactive({
   bizType: '',
 })
 
-const licenseTypes = ['C1', 'C2', 'C5', 'C6', 'B1', 'B2', 'A1', 'A2', 'A3', 'D', 'E', 'F', 'M', 'N', 'P']
+import { LICENSE_TYPES } from '@/config/license'
 
 const createDialogVisible = ref(false)
 const createFormRef = ref(null)

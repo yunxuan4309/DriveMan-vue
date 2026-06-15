@@ -7,9 +7,14 @@
 
       <el-table :data="scoreList" v-loading="loading" border stripe>
         <el-table-column type="index" label="序号" width="60" align="center" />
-        <el-table-column label="科目" width="80" align="center">
+        <el-table-column label="科目" width="90" align="center">
           <template #default="{ row }">
-            <el-tag size="small">科目{{ row.subject || '-' }}</el-tag>
+            <el-tag size="small" type="primary">{{ row.subjectName || '科目' + row.subject }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="车型" width="70" align="center">
+          <template #default="{ row }">
+            <span>{{ row.licenseType || '-' }}</span>
           </template>
         </el-table-column>
         <el-table-column label="考试日期" width="120" align="center">
@@ -17,12 +22,12 @@
             {{ row.examDate || '-' }}
           </template>
         </el-table-column>
-        <el-table-column label="考试地点" min-width="150" show-overflow-tooltip>
+        <el-table-column label="考试地点" min-width="160" show-overflow-tooltip>
           <template #default="{ row }">
             {{ row.location || '-' }}
           </template>
         </el-table-column>
-        <el-table-column prop="score" label="成绩" width="100" align="center">
+        <el-table-column label="成绩" width="90" align="center">
           <template #default="{ row }">
             <span v-if="row.score != null" :style="getScoreStyle(row.score)">{{ row.score }}</span>
             <span v-else class="text-gray">-</span>
@@ -30,53 +35,48 @@
         </el-table-column>
         <el-table-column label="结果" width="80" align="center">
           <template #default="{ row }">
-            <el-tag v-if="row.score != null" :type="row.score >= 90 ? 'success' : 'danger'" size="small">
-              {{ row.score >= 90 ? '通过' : '不通过' }}
-            </el-tag>
+            <el-tag v-if="row.passResult === '合格'" type="success" size="small">通过</el-tag>
+            <el-tag v-else-if="row.passResult === '不合格'" type="danger" size="small">不通过</el-tag>
             <span v-else class="text-gray">-</span>
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="报名时间" width="160">
+        <el-table-column label="状态" width="100" align="center">
           <template #default="{ row }">
-            {{ formatDateTime(row.createTime) }}
+            <el-tag :type="getStatusTag(row.status)" size="small" effect="plain">
+              {{ row.statusDesc || getStatusText(row.status) }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="报名时间" width="160">
+          <template #default="{ row }">
+            {{ formatDateTime(row.applyTime) }}
           </template>
         </el-table-column>
       </el-table>
 
-      <div class="pagination-container">
-        <el-pagination
-          v-model:current-page="pagination.page"
-          v-model:page-size="pagination.size"
-          :total="pagination.total"
-          layout="total, sizes, prev, pager, next, jumper"
-          :page-sizes="[5, 10, 20]"
-          @size-change="fetchScores"
-          @current-change="fetchScores"
-        />
-      </div>
+      <el-empty v-if="!loading && scoreList.length === 0" description="暂无考试成绩记录" style="padding: 40px 0" />
     </el-card>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { getStudentExamRegistrations } from '@/api/exam'
+import { ref, onMounted } from 'vue'
+import { getMyScores } from '@/api/exam'
 import { useUserStore } from '@/stores/user'
 
 const userStore = useUserStore()
-
 const scoreList = ref([])
 const loading = ref(false)
-const pagination = reactive({ page: 1, size: 10, total: 0 })
 
 async function fetchScores() {
   loading.value = true
   try {
-    const res = await getStudentExamRegistrations(userStore.userId)
-    scoreList.value = Array.isArray(res) ? res.filter(r => r.score != null) : []
-    pagination.total = scoreList.value.length
+    const res = await getMyScores(userStore.userId)
+    const list = Array.isArray(res) ? res : res.records || []
+    scoreList.value = list.filter(r => r.score != null)
   } catch (error) {
     console.error('获取成绩失败:', error)
+    scoreList.value = []
   } finally {
     loading.value = false
   }
@@ -88,6 +88,14 @@ function getScoreStyle(score) {
     fontWeight: 600,
     fontSize: '16px',
   }
+}
+
+function getStatusTag(status) {
+  return { 0: 'warning', 1: 'success', 2: 'danger', 3: 'info' }[status] || 'info'
+}
+
+function getStatusText(status) {
+  return { 0: '待审核', 1: '审核通过', 2: '审核不通过', 3: '已考试' }[status] || '未知'
 }
 
 function formatDateTime(dateTime) {
@@ -102,10 +110,5 @@ onMounted(fetchScores)
 </script>
 
 <style scoped lang="scss">
-.pagination-container {
-  margin-top: 20px;
-  display: flex;
-  justify-content: flex-end;
-}
 .text-gray { color: #909399; }
 </style>

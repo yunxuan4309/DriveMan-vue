@@ -20,7 +20,7 @@
         </el-form-item>
         <el-form-item label="车型">
           <el-select v-model="searchForm.vehicleType" placeholder="全部" clearable style="width: 100px" @change="fetchList">
-            <el-option v-for="t in licenseTypes" :key="t" :label="t" :value="t" />
+            <el-option v-for="lt in LICENSE_TYPES" :key="lt.value" :label="lt.label" :value="lt.value" />
           </el-select>
         </el-form-item>
         <el-form-item label="型号">
@@ -93,7 +93,7 @@
         </el-form-item>
         <el-form-item label="车型" prop="vehicleType">
           <el-select v-model="form.vehicleType" placeholder="请选择" style="width: 100%">
-            <el-option v-for="t in licenseTypes" :key="t" :label="t" :value="t" />
+            <el-option v-for="lt in LICENSE_TYPES" :key="lt.value" :label="lt.label" :value="lt.value" />
           </el-select>
         </el-form-item>
         <el-form-item label="品牌">
@@ -136,7 +136,7 @@ const loading = ref(false)
 const total = ref(0)
 
 const searchForm = reactive({ page: 1, size: 10, vehicleType: '', status: undefined, plateNumber: '', brand: '', model: '', seats: undefined })
-const licenseTypes = ['C1', 'C2', 'C5', 'C6', 'B1', 'B2', 'A1', 'A2', 'A3', 'D', 'E', 'F', 'M', 'N', 'P']
+import { LICENSE_TYPES } from '@/config/license'
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
 const isEdit = ref(false)

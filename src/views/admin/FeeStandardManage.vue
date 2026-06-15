@@ -14,7 +14,7 @@
       <el-form :model="searchForm" inline class="search-form">
         <el-form-item label="车型">
           <el-select v-model="searchForm.licenseType" placeholder="全部车型" clearable style="width: 120px" @change="handleSearch">
-            <el-option v-for="t in licenseTypes" :key="t" :label="t" :value="t" />
+            <el-option v-for="lt in LICENSE_TYPES" :key="lt.value" :label="lt.label" :value="lt.value" />
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -70,7 +70,7 @@
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
         <el-form-item label="车型" prop="licenseType">
           <el-select v-model="form.licenseType" placeholder="请选择车型" style="width: 100%">
-            <el-option v-for="t in licenseTypes" :key="t" :label="t" :value="t" />
+            <el-option v-for="lt in LICENSE_TYPES" :key="lt.value" :label="lt.label" :value="lt.value" />
           </el-select>
         </el-form-item>
         <el-form-item label="科目" prop="subject">
@@ -108,7 +108,7 @@ const searchForm = reactive({
   licenseType: '',
 })
 
-const licenseTypes = ['C1', 'C2', 'C5', 'C6', 'B1', 'B2', 'A1', 'A2', 'A3', 'D', 'E', 'F', 'M', 'N', 'P']
+import { LICENSE_TYPES } from '@/config/license'
 
 // 数据列表
 const feeList = ref([])

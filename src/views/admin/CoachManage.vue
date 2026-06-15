@@ -20,7 +20,7 @@
         </el-form-item>
         <el-form-item label="准驾车型">
           <el-select v-model="searchForm.vehicleType" placeholder="全部车型" clearable style="width: 120px">
-            <el-option v-for="t in licenseTypes" :key="t" :label="t" :value="t" />
+            <el-option v-for="lt in LICENSE_TYPES" :key="lt.value" :label="lt.label" :value="lt.value" />
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -116,7 +116,7 @@
         </el-form-item>
         <el-form-item label="准驾车型" prop="vehicleType">
           <el-checkbox-group v-model="selectedVehicleTypes">
-            <el-checkbox v-for="t in licenseTypes" :key="t" :label="t">{{ t }}</el-checkbox>
+            <el-checkbox v-for="lt in LICENSE_TYPES" :key="lt.value" :label="lt.value">{{ lt.label }}</el-checkbox>
           </el-checkbox-group>
         </el-form-item>
       </el-form>
@@ -164,7 +164,7 @@ const searchForm = reactive({
   vehicleType: '',
 })
 
-const licenseTypes = ['C1', 'C2', 'C5', 'C6', 'B1', 'B2', 'A1', 'A2', 'A3', 'D', 'E', 'F', 'M', 'N', 'P']
+import { LICENSE_TYPES } from '@/config/license'
 
 // 分页
 const pagination = reactive({

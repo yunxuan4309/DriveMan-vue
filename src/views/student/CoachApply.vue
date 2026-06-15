@@ -62,7 +62,7 @@
             </el-form-item>
             <el-form-item label="车型">
               <el-select v-model="searchForm.vehicleType" placeholder="全部" clearable style="width: 100px">
-                <el-option v-for="t in licenseTypes" :key="t" :label="t" :value="t" />
+                <el-option v-for="lt in LICENSE_TYPES" :key="lt.value" :label="lt.label" :value="lt.value" />
               </el-select>
             </el-form-item>
             <el-form-item label="评分">
@@ -207,7 +207,7 @@ import { Refresh, UserFilled } from '@element-plus/icons-vue'
 import { getCoachList, applyCoach, getStudentApplications, getMyCoach, recommendCoaches } from '@/api/coach'
 import { useUserStore } from '@/stores/user'
 
-const licenseTypes = ['C1', 'C2', 'C5', 'C6', 'B1', 'B2', 'A1', 'A2', 'A3', 'D', 'E', 'F', 'M', 'N', 'P']
+import { LICENSE_TYPES } from '@/config/license'
 
 const userStore = useUserStore()
 const myCoachLoading = ref(false)

@@ -142,7 +142,7 @@
         </el-form-item>
         <el-form-item label="驾照类型" prop="licenseType" v-if="form.role === 1">
           <el-select v-model="form.licenseType" placeholder="请选择驾照类型" style="width: 100%">
-            <el-option v-for="t in licenseTypes" :key="t" :label="t" :value="t" />
+            <el-option v-for="lt in LICENSE_TYPES" :key="lt.value" :label="lt.label" :value="lt.value" />
           </el-select>
         </el-form-item>
       </el-form>
@@ -217,7 +217,7 @@ const searchForm = reactive({
   status: undefined,
 })
 
-const licenseTypes = ['C1', 'C2', 'C5', 'C6', 'B1', 'B2', 'A1', 'A2', 'A3', 'D', 'E', 'F', 'M', 'N', 'P']
+import { LICENSE_TYPES } from '@/config/license'
 
 // 分页
 const pagination = reactive({

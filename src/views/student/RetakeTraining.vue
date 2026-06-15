@@ -187,9 +187,10 @@ const applyLoading = ref(false)
 async function fetchFailedExams() {
   failedLoading.value = true
   try {
-    const res = await getStudentExamRegistrations(userStore.userId)
+    const params = { page: 1, size: 999 }
+    const res = await getStudentExamRegistrations(userStore.userId, params)
     // 筛选出已挂科（passStatus=0）且尚未申请二次培训的记录
-    const failedRegs = Array.isArray(res) ? res : []
+    const failedRegs = Array.isArray(res) ? res : res.records || []
     // 过滤：已经申请过二次培训的 examRegistrationId 不再显示
     const appliedIds = new Set(myRecords.value.map(r => r.examRegistrationId))
     failedExamList.value = failedRegs.filter(r => r.passStatus === 0 && !appliedIds.has(r.id))

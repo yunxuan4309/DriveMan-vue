@@ -73,7 +73,7 @@ async function fetchList() {
   loading.value = true
   try {
     const res = await getCoachExamRegistrations()
-    regList.value = res || []
+    regList.value = Array.isArray(res) ? res : res.records || []
   } catch (error) {
     console.error('获取学员考试报名列表失败:', error)
   } finally {

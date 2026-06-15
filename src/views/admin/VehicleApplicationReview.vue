@@ -16,12 +16,12 @@
         </el-form-item>
         <el-form-item label="当前车型">
           <el-select v-model="pendingSearch.currentVehicleType" placeholder="全部" clearable style="width: 100px" @change="fetchPendingList">
-            <el-option v-for="t in licenseTypes" :key="t" :label="t" :value="t" />
+            <el-option v-for="lt in LICENSE_TYPES" :key="lt.value" :label="lt.label" :value="lt.value" />
           </el-select>
         </el-form-item>
         <el-form-item label="申请车型">
           <el-select v-model="pendingSearch.requestedVehicleType" placeholder="全部" clearable style="width: 100px" @change="fetchPendingList">
-            <el-option v-for="t in licenseTypes" :key="t" :label="t" :value="t" />
+            <el-option v-for="lt in LICENSE_TYPES" :key="lt.value" :label="lt.label" :value="lt.value" />
           </el-select>
         </el-form-item>
         <el-form-item label="申请时间">
@@ -107,7 +107,7 @@
         </el-form-item>
         <el-form-item label="申请车型">
           <el-select v-model="historySearch.vehicleType" placeholder="全部" clearable style="width: 100px" @change="fetchHistoryList">
-            <el-option v-for="t in licenseTypes" :key="t" :label="t" :value="t" />
+            <el-option v-for="lt in LICENSE_TYPES" :key="lt.value" :label="lt.label" :value="lt.value" />
           </el-select>
         </el-form-item>
         <el-form-item label="状态">
@@ -205,7 +205,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search } from '@element-plus/icons-vue'
 import { getPendingVehicleApplications, getAllVehicleApplications, auditVehicleApplication } from '@/api/admin'
 
-const licenseTypes = ['C1', 'C2', 'C5', 'C6', 'B1', 'B2', 'A1', 'A2', 'A3', 'D', 'E', 'F', 'M', 'N', 'P']
+import { LICENSE_TYPES } from '@/config/license'
 
 // ── 待审核 ──
 const pendingLoading = ref(false)

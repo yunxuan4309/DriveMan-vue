@@ -23,7 +23,11 @@
                 {{ profile.basic?.statusDesc || '-' }}
               </el-tag>
               <span class="sep">|</span>
-              <span>报考 {{ profile.basic?.licenseType || '-' }}</span>
+              <span>当前驾照 {{ profile.basic?.licenseType || '-' }}</span>
+              <template v-if="profile.basic?.originalEnrollLicense && profile.basic?.originalEnrollLicense !== profile.basic?.licenseType">
+                <span class="sep">|</span>
+                <span style="color: #909399; font-size: 13px">原始报名 {{ profile.basic.originalEnrollLicense }}</span>
+              </template>
               <template v-if="profile.progress?.hasActiveUpgrade">
                 <span class="sep">|</span>
                 <el-tag size="small" type="warning">增驾中 → {{ profile.progress.upgradeTargetLicense }}</el-tag>
@@ -46,6 +50,11 @@
           <el-descriptions-item label="入学时间">{{ fmt(profile.basic?.enrollDate) }}</el-descriptions-item>
           <el-descriptions-item label="当前驾照">
             <span>{{ profile.basic?.licenseType || '-' }}</span>
+            <template v-if="profile.basic?.originalEnrollLicense && profile.basic?.originalEnrollLicense !== profile.basic?.licenseType">
+              <el-tag size="small" type="info" style="margin-left: 6px">
+                原始报名 {{ profile.basic.originalEnrollLicense }}
+              </el-tag>
+            </template>
             <el-tag v-if="profile.basic?.licenseObtainedDate" size="small" type="success" style="margin-left: 6px">
               已获取 {{ fmtDate(profile.basic.licenseObtainedDate) }}
             </el-tag>
@@ -62,6 +71,23 @@
             <span style="margin-left: 6px; color: #909399; font-size: 13px">考试进行中</span>
           </el-descriptions-item>
         </el-descriptions>
+      </el-card>
+
+      <!-- 增驾历史 -->
+      <el-card v-if="profile.upgradeHistory?.length" class="profile-card">
+        <template #header><span class="card-title">增驾历史</span></template>
+        <el-timeline>
+          <el-timeline-item
+            v-for="(item, idx) in profile.upgradeHistory"
+            :key="idx"
+            :timestamp="fmt(item.completeTime)"
+            placement="top"
+            :type="idx === profile.upgradeHistory.length - 1 ? 'primary' : 'success'">
+            <span>{{ item.originalLicense }} → {{ item.targetLicense }}</span>
+            <el-tag v-if="item.targetLicense === profile.basic?.licenseType" size="small" type="success" style="margin-left: 8px">当前驾照</el-tag>
+            <el-tag v-if="idx === 0 && item.originalLicense === profile.basic?.originalEnrollLicense" size="small" type="info" style="margin-left: 4px">原始报名</el-tag>
+          </el-timeline-item>
+        </el-timeline>
       </el-card>
 
       <!-- 报名套餐 -->

@@ -115,8 +115,8 @@ const loading = ref(false)
 const currentVehicleType = ref('')
 const applicationList = ref([])
 
-const licenseTypes = ['C1', 'C2', 'C5', 'C6', 'B1', 'B2', 'A1', 'A2', 'A3', 'D', 'E', 'F', 'M', 'N', 'P']
-const availableVehicleTypes = licenseTypes
+import { LICENSE_TYPES } from '@/config/license'
+const availableVehicleTypes = LICENSE_TYPES.map(lt => lt.value)
 
 const applyForm = reactive({
   requestedVehicleType: [],

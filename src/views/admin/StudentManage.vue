@@ -26,7 +26,7 @@
         </el-form-item>
         <el-form-item label="驾照类型">
           <el-select v-model="searchForm.licenseType" placeholder="全部车型" clearable style="width: 120px">
-            <el-option v-for="t in licenseTypes" :key="t" :label="t" :value="t" />
+            <el-option v-for="lt in LICENSE_TYPES" :key="lt.value" :label="lt.label" :value="lt.value" />
           </el-select>
         </el-form-item>
         <el-form-item label="结业状态">
@@ -163,14 +163,14 @@
         </el-form-item>
         <el-form-item label="驾照类型" prop="licenseType">
           <el-select v-model="form.licenseType" placeholder="请选择驾照类型" style="width: 100%">
-            <el-option v-for="t in licenseTypes" :key="t" :label="t" :value="t" />
+            <el-option v-for="lt in LICENSE_TYPES" :key="lt.value" :label="lt.label" :value="lt.value" />
           </el-select>
         </el-form-item>
 
         <el-divider content-position="left">外校学员已有驾照信息（选填）</el-divider>
         <el-form-item label="已有驾照">
           <el-select v-model="form.existingLicense" placeholder="已有驾照类型" clearable style="width: 100%">
-            <el-option v-for="t in licenseTypes" :key="t" :label="t" :value="t" />
+            <el-option v-for="lt in LICENSE_TYPES" :key="lt.value" :label="lt.label" :value="lt.value" />
           </el-select>
         </el-form-item>
         <el-form-item label="驾龄(年)">
@@ -315,7 +315,7 @@ const searchForm = reactive({
   address: '',
 })
 
-const licenseTypes = ['C1', 'C2', 'C5', 'C6', 'B1', 'B2', 'A1', 'A2', 'A3', 'D', 'E', 'F', 'M', 'N', 'P']
+import { LICENSE_TYPES } from '@/config/license'
 
 // 分页
 const pagination = reactive({

@@ -9,9 +9,9 @@ export function applyLicenseUpgrade(data) {
   return request.post('/license-upgrades/apply', data)
 }
 
-// 学员查看自己的增驾申请
-export function getMyLicenseUpgrades() {
-  return request.get('/license-upgrades/my')
+// 学员查看自己的增驾申请（分页+筛选）
+export function getMyLicenseUpgrades(params = {}) {
+  return request.get('/license-upgrades/my', { params })
 }
 
 // 管理员分页查询增驾申请
