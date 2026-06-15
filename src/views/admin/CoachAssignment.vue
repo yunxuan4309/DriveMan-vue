@@ -1,66 +1,119 @@
 <template>
   <div class="coach-assignment">
-    <el-card>
-      <template #header>
-        <div class="card-header">
-          <span>教练分配</span>
-          <el-button type="primary" @click="handleAssign">
-            <el-icon><Plus /></el-icon>手动分配
-          </el-button>
-        </div>
-      </template>
+    <!-- 页头 -->
+    <div class="page-header">
+      <div class="header-left">
+        <h2 class="page-title">教练分配</h2>
+        <span class="page-desc">管理学员与教练的绑定关系</span>
+      </div>
+      <el-button type="primary" :icon="Plus" @click="handleAssign">手动分配</el-button>
+    </div>
 
+    <!-- 标签页切换 -->
+    <el-card shadow="never" class="main-card">
+      <el-tabs v-model="activeTab" class="page-tabs" @tab-change="handleTabChange">
+        <el-tab-pane label="全部" name="all">
+          <template #label>
+            <span class="tab-label"><el-icon :size="14"><List /></el-icon> 全部</span>
+          </template>
+        </el-tab-pane>
+        <el-tab-pane label="已绑定" name="bound">
+          <template #label>
+            <span class="tab-label"><el-icon :size="14"><Link /></el-icon> 已绑定</span>
+          </template>
+        </el-tab-pane>
+        <el-tab-pane label="已解绑" name="unbound">
+          <template #label>
+            <span class="tab-label"><el-icon :size="14"><Minus /></el-icon> 已解绑</span>
+          </template>
+        </el-tab-pane>
+      </el-tabs>
 
       <!-- 搜索栏 -->
-      <el-form :model="searchForm" inline class="search-form">
-        <el-form-item label="学员姓名">
-          <el-input v-model="searchForm.studentName" placeholder="学员姓名搜索" clearable style="width: 140px" @keyup.enter="handleSearch" />
-        </el-form-item>
-        <el-form-item label="教练姓名">
-          <el-input v-model="searchForm.coachName" placeholder="教练姓名搜索" clearable style="width: 140px" @keyup.enter="handleSearch" />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleSearch">查询</el-button>
-          <el-button @click="handleReset">重置</el-button>
-        </el-form-item>
-      </el-form>
+      <div class="search-bar">
+        <el-input
+          v-model="searchForm.studentName"
+          placeholder="学员姓名"
+          clearable
+          :prefix-icon="Search"
+          class="search-input"
+          @keyup.enter="handleSearch"
+        />
+        <el-input
+          v-model="searchForm.coachName"
+          placeholder="教练姓名"
+          clearable
+          :prefix-icon="Search"
+          class="search-input"
+          @keyup.enter="handleSearch"
+        />
+        <el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button>
+        <el-button @click="handleReset">重置</el-button>
+      </div>
 
-      <el-table :data="assignmentList" v-loading="loading" border stripe>
+      <!-- 统计行 -->
+      <div class="stats-row">
+        <span class="stat-item">
+          共 <strong>{{ total }}</strong> 条记录
+        </span>
+        <span class="stat-item">
+          已绑定 <strong>{{ boundCount }}</strong>
+        </span>
+        <span class="stat-item">
+          已解绑 <strong>{{ unboundCount }}</strong>
+        </span>
+      </div>
+
+      <!-- 表格 -->
+      <el-table :data="assignmentList" v-loading="loading" border stripe size="small">
         <el-table-column type="index" label="序号" width="60" align="center" />
-        <el-table-column prop="studentName" label="学员姓名" width="120" />
-        <el-table-column prop="coachName" label="教练姓名" width="120" />
-        <el-table-column label="绑定时间" width="160">
+        <el-table-column prop="studentName" label="学员姓名" width="140" />
+        <el-table-column prop="coachName" label="教练姓名" width="140" />
+        <el-table-column label="绑定时间" width="180">
           <template #default="{ row }">
-            {{ formatDateTime(row.bindTime) }}
+            <span class="cell-text">{{ formatDateTime(row.bindTime) }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="status" label="状态" width="80" align="center">
+        <el-table-column label="状态" width="100" align="center">
           <template #default="{ row }">
-            <el-tag :type="row.status !== 0 ? 'success' : 'info'">
-              {{ row.status !== 0 ? '已绑定' : '已解绑' }}
+            <el-tag v-if="row.status !== 0" type="success" size="small" effect="plain">
+              <el-icon style="vertical-align: -2px; margin-right: 2px"><Link /></el-icon> 已绑定
+            </el-tag>
+            <el-tag v-else type="info" size="small" effect="plain">
+              <el-icon style="vertical-align: -2px; margin-right: 2px"><Minus /></el-icon> 已解绑
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="120" fixed="right">
+        <el-table-column label="操作" width="120" fixed="right" align="center">
           <template #default="{ row }">
             <el-button
               v-if="row.status !== 0"
-              link type="danger" size="small"
+              text type="danger" size="small"
               @click="handleUnbind(row)"
             >
               解绑
             </el-button>
-            <span v-else class="text-gray">-</span>
+            <span v-else class="no-action">-</span>
           </template>
         </el-table-column>
       </el-table>
 
+      <!-- 空状态 -->
+      <el-empty v-if="!loading && filteredList.length === 0" :description="emptyText" style="padding: 40px 0" />
+
       <!-- 分页 -->
       <div class="pagination-wrapper" v-if="total > 0">
-        <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.size" :total="total" layout="total, sizes, prev, pager, next, jumper" :page-sizes="[10, 20, 50]" @size-change="fetchAssignments" @current-change="fetchAssignments" />
+        <el-pagination
+          v-model:current-page="pagination.page"
+          v-model:page-size="pagination.size"
+          :total="total"
+          layout="total, sizes, prev, pager, next, jumper"
+          :page-sizes="[10, 20, 50]"
+          small
+          @size-change="handlePageChange"
+          @current-change="handlePageChange"
+        />
       </div>
-
-      <el-empty v-if="!loading && assignmentList.length === 0" description="暂无记录" style="margin-top: 40px" />
     </el-card>
 
     <!-- 分配对话框 -->
@@ -96,22 +149,54 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, List, Link, Minus, Search } from '@element-plus/icons-vue'
 import { getCoachAssignments, assignCoach, unbindCoach, getCoachList } from '@/api/coach'
 import { getStudentList } from '@/api/student'
 
-const assignmentList = ref([])
+const activeTab = ref('all')
+
 const loading = ref(false)
-const total = ref(0)
+const rawList = ref([])
 const pagination = reactive({ page: 1, size: 10 })
+
+// 当前标签页下的总条数（前端分页用）
+const total = computed(() => filteredList.value.length)
 
 const searchForm = reactive({
   studentName: '',
   coachName: '',
 })
 
+// 按标签过滤后的数据
+const filteredList = computed(() => {
+  let list = rawList.value
+  if (activeTab.value === 'bound') {
+    list = list.filter(item => item.status !== 0)
+  } else if (activeTab.value === 'unbound') {
+    list = list.filter(item => item.status === 0)
+  }
+  return list
+})
+
+// 分页展示的数据（前端分页）
+const assignmentList = computed(() => {
+  const start = (pagination.page - 1) * pagination.size
+  const end = start + pagination.size
+  return filteredList.value.slice(start, end)
+})
+
+// 统计数据
+const boundCount = computed(() => rawList.value.filter(item => item.status !== 0).length)
+const unboundCount = computed(() => rawList.value.filter(item => item.status === 0).length)
+
+const emptyText = computed(() => {
+  const map = { all: '暂无绑定记录', bound: '暂无已绑定的记录', unbound: '暂无已解绑的记录' }
+  return map[activeTab.value]
+})
+
+// 分配对话框
 const assignDialogVisible = ref(false)
 const assignFormRef = ref(null)
 const assignLoading = ref(false)
@@ -120,36 +205,45 @@ const assignRules = {
   studentId: [{ required: true, message: '请选择学员', trigger: 'change' }],
   coachId: [{ required: true, message: '请选择教练', trigger: 'change' }],
 }
-
 const studentList = ref([])
 const coachList = ref([])
 
 async function fetchAssignments() {
   loading.value = true
   try {
-    const params = { page: pagination.page, size: pagination.size }
+    const params = { page: 1, size: 9999 }
     if (searchForm.studentName) params.studentName = searchForm.studentName
     if (searchForm.coachName) params.coachName = searchForm.coachName
     const res = await getCoachAssignments(params)
-    assignmentList.value = Array.isArray(res) ? res : res.records || []
-    total.value = res.total || assignmentList.value.length
+    rawList.value = Array.isArray(res) ? res : res.records || []
+    pagination.page = 1
   } catch (error) {
     console.error('获取绑定关系失败:', error)
+    rawList.value = []
   } finally {
     loading.value = false
   }
 }
 
+function handleTabChange() {
+  const maxPage = Math.ceil(filteredList.value.length / pagination.size)
+  if (pagination.page > maxPage) {
+    pagination.page = maxPage || 1
+  }
+}
+
 function handleSearch() {
-  pagination.page = 1
   fetchAssignments()
 }
 
 function handleReset() {
   searchForm.studentName = ''
   searchForm.coachName = ''
-  pagination.page = 1
   fetchAssignments()
+}
+
+function handlePageChange() {
+  // computed 自动响应分页参数
 }
 
 async function fetchStudents() {
@@ -195,7 +289,11 @@ async function handleAssignSubmit() {
 
 async function handleUnbind(row) {
   try {
-    await ElMessageBox.confirm(`确定要解绑 "${row.studentName}" 与 "${row.coachName}" 的绑定关系吗？`, '提示', { type: 'warning' })
+    await ElMessageBox.confirm(
+      `确定要解绑 "${row.studentName}" 与 "${row.coachName}" 的绑定关系吗？`,
+      '提示',
+      { type: 'warning', confirmButtonText: '确认解绑', cancelButtonText: '取消' }
+    )
     await unbindCoach(row.id)
     ElMessage.success('解绑成功')
     fetchAssignments()
@@ -218,21 +316,157 @@ onMounted(fetchAssignments)
 </script>
 
 <style scoped lang="scss">
-.card-header {
+.coach-assignment {
+  max-width: 1100px;
+  padding: 16px 24px;
+}
+
+/* ── 页头 ── */
+.page-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-}
-.search-form {
+  align-items: flex-start;
   margin-bottom: 20px;
-  padding: 20px;
-  background-color: #f5f7fa;
-  border-radius: 4px;
 }
+
+.header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.page-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #303133;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.page-desc {
+  font-size: 13px;
+  color: #909399;
+}
+
+/* ── 主卡片 ── */
+.main-card {
+  border-radius: 8px;
+  padding-bottom: 4px;
+
+  :deep(.el-card__body) {
+    padding: 0;
+  }
+}
+
+/* ── 标签页 ── */
+.page-tabs {
+  padding: 0 20px;
+
+  :deep(.el-tabs__header) {
+    margin: 0;
+    border-bottom: 1px solid #ebeef5;
+  }
+
+  :deep(.el-tabs__nav-wrap::after) {
+    display: none;
+  }
+
+  :deep(.el-tabs__item) {
+    height: 44px;
+    padding: 0 16px;
+    font-size: 13px;
+    color: #606266;
+    transition: color 0.2s;
+
+    &:hover {
+      color: #409eff;
+    }
+
+    &.is-active {
+      color: #409eff;
+      font-weight: 500;
+    }
+  }
+}
+
+.tab-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ── 搜索栏 ── */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px 0;
+}
+
+.search-input {
+  width: 160px;
+
+  :deep(.el-input__wrapper) {
+    border-radius: 6px;
+    box-shadow: 0 0 0 1px #dcdfe6 inset;
+    transition: box-shadow 0.2s;
+
+    &:hover {
+      box-shadow: 0 0 0 1px #409eff inset;
+    }
+  }
+
+  :deep(.el-input__inner) {
+    font-size: 13px;
+  }
+}
+
+/* ── 统计行 ── */
+.stats-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 12px 20px 0;
+  font-size: 13px;
+  color: #909399;
+}
+
+.stat-item strong {
+  color: #303133;
+  font-weight: 600;
+}
+
+/* ── 表格 ── */
+.el-table {
+  margin: 12px 20px 0;
+  width: calc(100% - 40px);
+  border-radius: 6px;
+
+  :deep(th.el-table__cell) {
+    background-color: #f5f7fa;
+    color: #606266;
+    font-weight: 500;
+    font-size: 12px;
+  }
+
+  :deep(.cell) {
+    font-size: 13px;
+  }
+}
+
+.cell-text {
+  color: #606266;
+}
+
+.no-action {
+  color: #c0c4cc;
+  font-size: 13px;
+}
+
+/* ── 分页 ── */
 .pagination-wrapper {
   display: flex;
   justify-content: flex-end;
-  margin-top: 16px;
+  padding: 16px 20px;
 }
-.text-gray { color: #909399; }
 </style>

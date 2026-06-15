@@ -1,90 +1,49 @@
 <template>
-  <el-container class="app-container" v-if="showLayout">
-    <el-header class="app-header">
-      <div class="logo" @click="$router.push('/')">DriveMan</div>
-
-      <el-menu
-        :default-active="route.path"
-        mode="horizontal"
-        router
-        class="nav-menu"
-      >
-        <el-menu-item index="/">首页</el-menu-item>
-        <el-sub-menu index="/admin" v-if="userStore.role === 3">
-          <template #title>管理后台</template>
-          <el-menu-item index="/admin/students">学员管理</el-menu-item>
-          <el-menu-item index="/admin/coaches">教练管理</el-menu-item>
-          <el-menu-item index="/admin/vehicle-application-review">准教车型审核</el-menu-item>
-          <el-menu-item index="/admin/familiarization-manage">合场管理</el-menu-item>
-          <el-menu-item index="/admin/payment-manage">支付管理</el-menu-item>
-          <el-menu-item index="/admin/retake-training">二次培训管理</el-menu-item>
-          <el-menu-item index="/admin/physical-exam-manage">体检管理</el-menu-item>
-          <el-menu-item index="/admin/license-upgrade-manage">增驾管理</el-menu-item>
-          <el-menu-item index="/admin/vehicles">车辆管理</el-menu-item>
-          <el-menu-item index="/admin/schedule-review">排班审核</el-menu-item>
-          <el-menu-item index="/admin/system-config">系统配置</el-menu-item>
-          <el-menu-item index="/admin/file-requests">文件请求管理</el-menu-item>
-          <el-sub-menu index="/admin/base-data">
-            <template #title>基础数据管理</template>
-            <el-menu-item index="/admin/fee-standards">费用标准管理</el-menu-item>
-            <el-menu-item index="/admin/license-configs">车型科目配置</el-menu-item>
-            <el-menu-item index="/admin/venues">场地管理</el-menu-item>
-            <el-menu-item index="/admin/special-exams">特种车辆考试管理</el-menu-item>
-          </el-sub-menu>
-        </el-sub-menu>
-        <el-menu-item index="/about">关于</el-menu-item>
-      </el-menu>
-
-      <div class="header-right">
-        <template v-if="userStore.isLoggedIn">
-          <el-tag :type="roleTagType" size="small">{{ userStore.roleLabel }}</el-tag>
-          <span class="user-name">{{ userStore.userInfo.realName || userStore.userInfo.username }}</span>
-          <el-button text type="primary" size="small" @click="handleLogout">退出</el-button>
-        </template>
-        <template v-else>
-          <el-button text type="primary" size="small" @click="$router.push('/login')">登录</el-button>
-        </template>
-      </div>
-    </el-header>
-
-    <!-- 文件请求提醒横幅 -->
-    <div v-if="showFileRequestBanner" class="file-request-banner">
-      <el-alert
-        :title="`您有 ${fileRequestPendingCount} 个待处理的文件提交请求，请尽快上传文件`"
-        type="warning"
-        show-icon
-        :closable="false"
-        style="border-radius: 0"
-      >
-        <template #default>
-          <el-button type="warning" size="small" text @click="goToFileRequests">
-            查看详情
-          </el-button>
-        </template>
-      </el-alert>
-    </div>
-
-    <el-main class="app-main">
-      <router-view />
-    </el-main>
-  </el-container>
-
   <!-- 登录页不使用全局布局 -->
-  <router-view v-else />
+  <router-view v-if="!showLayout" />
+
+  <!-- 主布局 -->
+  <el-container class="app-container" v-else>
+    <SidebarMenu />
+    <el-container class="right-panel">
+      <TopHeader />
+
+      <!-- 文件请求提醒横幅 -->
+      <div v-if="showFileRequestBanner" class="file-request-banner">
+        <el-alert
+          :title="`您有 ${fileRequestPendingCount} 个待处理的文件提交请求，请尽快上传文件`"
+          type="warning"
+          show-icon
+          :closable="false"
+          style="border-radius: 0"
+        >
+          <template #default>
+            <el-button type="warning" size="small" text @click="goToFileRequests">
+              查看详情
+            </el-button>
+          </template>
+        </el-alert>
+      </div>
+
+      <el-main class="app-main">
+        <router-view />
+      </el-main>
+    </el-container>
+  </el-container>
 </template>
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import { getPendingFileRequestCount } from '@/api/fileRequest'
+import SidebarMenu from '@/components/SidebarMenu.vue'
+import TopHeader from '@/components/TopHeader.vue'
 
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 
-// 页面刷新时从 localStorage 恢复登录态
 onMounted(() => {
   userStore.restoreSession()
   if (userStore.isLoggedIn && (userStore.role === 1 || userStore.role === 2)) {
@@ -110,7 +69,6 @@ async function fetchFileRequestCount() {
   }
 }
 
-// 路由变化时重新检查
 watch(() => route.path, () => {
   if (userStore.isLoggedIn && (userStore.role === 1 || userStore.role === 2)) {
     fetchFileRequestCount()
@@ -124,62 +82,30 @@ function goToFileRequests() {
     router.push('/coach/file-requests')
   }
 }
-
-const roleTagType = computed(() => {
-  const map = { 1: 'success', 2: 'warning', 3: 'danger' }
-  return map[userStore.role] || 'info'
-})
-
-function handleLogout() {
-  userStore.logout()
-  ElMessage.success('已退出')
-  router.push('/login')
-}
 </script>
 
 <style lang="scss">
 @use '@/styles/global' as *;
 
-.app-container {
-  min-height: 100vh;
+html, body, #app {
+  height: 100%;
+  margin: 0;
 }
 
-.app-header {
+.app-container {
+  height: 100vh;
+}
+
+.right-panel {
   display: flex;
-  align-items: center;
-  background: #fff;
-  border-bottom: 1px solid #dcdfe6;
-  padding: 0 24px;
-
-  .logo {
-    font-size: 22px;
-    font-weight: 700;
-    color: $primary-color;
-    margin-right: 40px;
-    white-space: nowrap;
-    cursor: pointer;
-  }
-
-  .nav-menu {
-    flex: 1;
-    border-bottom: none;
-  }
-
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    white-space: nowrap;
-
-    .user-name {
-      font-size: 14px;
-      color: #333;
-    }
-  }
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .app-main {
+  flex: 1;
+  overflow-y: auto;
   background: #f5f7fa;
-  min-height: calc(100vh - $header-height);
+  padding: 0;
 }
 </style>

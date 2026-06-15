@@ -3,36 +3,47 @@
     <!-- 欢迎区域 -->
     <el-card shadow="never" class="welcome-card">
       <div class="welcome-content">
-        <el-avatar :size="56" :icon="UserFilled" style="cursor: pointer" @click="$router.push('/profile')" />
+        <el-avatar :size="56" :icon="UserFilled" style="cursor: pointer; background: #ecf5ff; color: #409eff" @click="$router.push('/profile')" />
         <div>
-          <h2>欢迎，{{ userStore.roleLabel }}</h2>
+          <h2>欢迎回来，{{ userStore.userInfo.realName || userStore.userInfo.username }}</h2>
           <p class="user-info">
-            {{ userStore.userInfo.realName || userStore.userInfo.username }}
-            <el-divider direction="vertical" />
+            <el-tag :type="roleTagType" size="small" effect="light">{{ userStore.roleLabel }}</el-tag>
+            <span class="sep">|</span>
             ID: {{ userStore.userId }}
+            <template v-if="userStore.licenseType">
+              <span class="sep">|</span>
+              车型: {{ userStore.licenseType }}
+            </template>
           </p>
         </div>
       </div>
     </el-card>
 
-    <!-- 功能按钮区 -->
-    <el-card shadow="never" class="functions-card">
+    <!-- 快捷入口卡片 -->
+    <el-card shadow="never" class="quick-card">
       <template #header>
-        <span style="font-weight: 600; font-size: 16px">功能菜单</span>
+        <span class="card-title">快捷入口</span>
       </template>
-      <div class="functions-grid">
+      <div class="quick-grid">
         <div
-          v-for="item in menuItems"
+          v-for="item in quickItems"
           :key="item.label"
-          class="function-item"
-          @click="handleClick(item)"
+          class="quick-item"
+          @click="router.push(item.route)"
         >
-          <el-button :type="item.type || 'primary'" class="function-btn">
-            <el-icon :size="22"><component :is="item.icon" /></el-icon>
-            <span class="btn-label">{{ item.label }}</span>
+          <el-button :type="item.type || 'primary'" class="quick-btn">
+            <el-icon :size="20"><component :is="item.icon" /></el-icon>
           </el-button>
-          <p class="btn-desc">{{ item.desc }}</p>
+          <span class="quick-label">{{ item.label }}</span>
         </div>
+      </div>
+    </el-card>
+
+    <!-- 使用提示 -->
+    <el-card shadow="never" class="tip-card">
+      <div class="tip-content">
+        <el-icon :size="18" color="#909399"><InfoFilled /></el-icon>
+        <span>使用左侧菜单导航到各功能模块</span>
       </div>
     </el-card>
   </div>
@@ -40,125 +51,40 @@
 
 <script setup>
 import { computed } from 'vue'
-import { ElMessage } from 'element-plus'
-import { useUserStore } from '@/stores/user'
 import { useRouter } from 'vue-router'
-import {
-  UserFilled,
-  Calendar,
-  Edit,
-  Document,
-  User,
-  Trophy,
-  Setting,
-  Files,
-  FolderOpened,
-  School,
-  Avatar,
-  DataAnalysis,
-  Money,
-  Bicycle,
-  OfficeBuilding,
-  Van,
-  Refresh,
-} from '@element-plus/icons-vue'
+import { UserFilled, Calendar, Edit, FolderOpened, InfoFilled } from '@element-plus/icons-vue'
+import { useUserStore } from '@/stores/user'
+import { menuConfig } from '@/config/menu'
 
-const userStore = useUserStore()
 const router = useRouter()
+const userStore = useUserStore()
 
-// 按车型限制的功能路由（examMode: 1=普通车, 2=特种车）
-const REGULAR_ONLY_ROUTES = ['/student/exam-registration', '/student/scores']
-const SPECIAL_ONLY_ROUTES = [] // 特种车专属（暂无学员端页面）
+const roleTagType = computed(() => {
+  const map = { 0: 'info', 1: 'success', 2: 'warning', 3: 'danger' }
+  return map[userStore.role] || 'info'
+})
 
-const menuMap = {
-  0: [
-    { label: '驾考报名', desc: '选择套餐完成报名', icon: Edit, type: 'primary', route: '/student/enrollment' },
-  ],
-  1: [
-    { label: '约课管理', desc: '预约或取消课程', icon: Calendar, type: 'primary', route: '/student/appointment' },
-    { label: '考试报名', desc: '报名考试场次', icon: Edit, type: 'success', route: '/student/exam-registration' },
-    { label: '教练申请', desc: '选择并申请教练', icon: User, type: 'warning', route: '/student/coach-apply' },
-    { label: '文件管理', desc: '上传与查看文件', icon: FolderOpened, type: 'info', route: '/student/files' },
-    { label: '我的成绩', desc: '查看考试成绩', icon: Trophy, type: 'danger', route: '/student/scores' },
-    { label: '学习进度', desc: '查看学习进度和证书', icon: DataAnalysis, type: '', route: '/student/progress' },
-    { label: '合场申请', desc: '申请考试合场', icon: Van, type: '', route: '/student/familiarization' },
-    { label: '我的账单', desc: '查看支付记录', icon: Money, type: '', route: '/student/payments' },
-    { label: '二次培训', desc: '挂科补考培训', icon: Edit, type: '', route: '/student/retake-training' },
-    { label: '体检申请', desc: '预约体检', icon: Document, type: '', route: '/student/physical-exam' },
-    { label: '增驾申请', desc: '申请增驾车型', icon: Trophy, type: '', route: '/student/license-upgrade' },
-    { label: '我的文件请求', desc: '查看和处理文件提交请求', icon: Document, type: '', route: '/student/file-requests' },
-  ],
-  2: [
-    { label: '我的课程', desc: '查看课程安排', icon: Calendar, type: 'primary', route: '/coach/courses' },
-    { label: '学员管理', desc: '学员管理与移交', icon: School, type: 'success', route: '/coach/students' },
-    { label: '学员考试', desc: '查看学员考试状态', icon: Trophy, type: 'warning', route: '/coach/exam' },
-    { label: '考试场次', desc: '查看考试场次信息', icon: Edit, type: 'info', route: '/coach/exam-sessions' },
-    { label: '准教车型申请', desc: '申请增加可教车型', icon: Bicycle, type: '', route: '/coach/vehicle-application' },
-    { label: '文件管理', desc: '上传和管理文件', icon: FolderOpened, type: '', route: '/coach/files' },
-    { label: '排班管理', desc: '提交/管理排班', icon: Calendar, type: '', route: '/coach/schedule' },
-    { label: '二次培训', desc: '学员补考培训', icon: Edit, type: '', route: '/coach/retake-training' },
-    { label: '我的文件请求', desc: '查看和处理文件提交请求', icon: Document, type: '', route: '/coach/file-requests' },
-  ],
-  3: [
-    { label: '学员管理', desc: '管理所有学员', icon: Avatar, type: 'primary', route: '/admin/students' },
-    { label: '教练管理', desc: '管理教练信息', icon: User, type: 'success', route: '/admin/coaches' },
-    { label: '报名审核', desc: '审核学员报名', icon: Edit, type: 'warning', route: '/admin/registration-review' },
-    { label: '约课管理', desc: '查看所有约课', icon: Calendar, type: 'info' },
-    { label: '考试场次', desc: '发布与管理场次', icon: Setting, type: '', route: '/admin/exam-sessions' },
-    { label: '考试审核', desc: '审核考试报名', icon: Document, type: 'danger', route: '/admin/exam-review' },
-    { label: '教练申请审核', desc: '审核教练申请', icon: Files, type: 'warning', route: '/admin/coach-application-review' },
-    { label: '教练分配', desc: '为学员分配教练', icon: School, type: 'success', route: '/admin/coach-assignment' },
-    { label: '文件管理', desc: '管理所有文件', icon: FolderOpened, type: 'info', route: '/admin/files' },
-    { label: '统计报表', desc: '查看统计数据', icon: DataAnalysis, type: 'danger', route: '/admin/statistics' },
-    { label: '费用标准', desc: '管理培训费用', icon: Money, type: 'primary', route: '/admin/fee-standards' },
-    { label: '车型配置', desc: '管理车型科目', icon: Bicycle, type: 'success', route: '/admin/license-configs' },
-    { label: '场地管理', desc: '统一管理考场/训练场/体检点', icon: OfficeBuilding, type: 'warning', route: '/admin/venues' },
-    { label: '特种车辆考试', desc: '管理特种车辆成绩', icon: Van, type: 'info', route: '/admin/special-exams' },
-    { label: '准教车型审核', desc: '审核教练车型变更', icon: Bicycle, type: '', route: '/admin/vehicle-application-review' },
-    { label: '合场管理', desc: '管理合场安排', icon: Van, type: '', route: '/admin/familiarization-manage' },
-    { label: '支付管理', desc: '管理支付账单', icon: Money, type: '', route: '/admin/payment-manage' },
-    { label: '二次培训', desc: '管理补考培训审核', icon: Edit, type: '', route: '/admin/retake-training' },
-    { label: '体检管理', desc: '审核体检申请录入结果', icon: Document, type: '', route: '/admin/physical-exam-manage' },
-    { label: '车辆管理', desc: '管理教练车辆信息', icon: Van, type: '', route: '/admin/vehicles' },
-    { label: '排班审核', desc: '审核教练排班申请', icon: Calendar, type: '', route: '/admin/schedule-review' },
-    { label: '系统配置', desc: '管理系统配置项', icon: Setting, type: '', route: '/admin/system-config' },
-    { label: '增驾管理', desc: '审核增驾申请录入成绩', icon: Trophy, type: '', route: '/admin/license-upgrade-manage' },
-    { label: '文件请求管理', desc: '发起和管理文件提交请求', icon: Document, type: '', route: '/admin/file-requests' },
-  ],
-}
-
-const menuItems = computed(() => menuMap[userStore.role] || [])
-
-function handleClick(item) {
-  if (!item.route) {
-    ElMessage.info(`「${item.label}」功能待开发`)
-    return
-  }
-
-  const lt = userStore.licenseType || ''
-  // 特种车点击普通车专属功能（examMode=2 表示特种车）
-  if (userStore.isSpecial && REGULAR_ONLY_ROUTES.includes(item.route)) {
-    ElMessage.warning(`您报考的是特种车辆（${lt}），无需使用此功能`)
-    return
-  }
-  // 普通车点击特种车专属功能
-  if (userStore.examMode === 1 && SPECIAL_ONLY_ROUTES.includes(item.route)) {
-    ElMessage.warning(`您报考的是普通车型（${lt}），无需使用特种车辆相关功能`)
-    return
-  }
-
-  router.push(item.route)
-}
+// 快捷入口：取每个分组的第一个子项
+const quickItems = computed(() => {
+  const groups = menuConfig[userStore.role] || []
+  return groups.slice(0, 4).map(g => ({
+    label: g.children[0]?.title || g.title,
+    icon: g.children[0]?.icon || g.icon,
+    type: ['primary', 'success', 'warning', 'info'][groups.indexOf(g)],
+    route: g.children[0]?.route || '/',
+  }))
+})
 </script>
 
-<style lang="scss" scoped>
+<style scoped lang="scss">
 .home {
-  max-width: 960px;
+  max-width: 860px;
   margin: 32px auto;
+  padding: 0 24px;
 }
 
 .welcome-card {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 
   :deep(.el-card__body) {
     padding: 28px 32px;
@@ -168,30 +94,53 @@ function handleClick(item) {
 .welcome-content {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 18px;
 
   h2 {
-    font-size: 22px;
-    margin: 0 0 4px;
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 6px;
+    color: #303133;
   }
 
   .user-info {
     margin: 0;
-    font-size: 14px;
-    color: #999;
+    font-size: 13px;
+    color: #909399;
+    display: flex;
+    align-items: center;
+  }
+
+  .sep {
+    margin: 0 8px;
+    color: #dcdfe6;
   }
 }
 
-.functions-card {
-  .functions-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 16px;
+.quick-card {
+  margin-bottom: 20px;
+
+  :deep(.el-card__body) {
+    padding: 16px 20px;
   }
 }
 
-.function-item {
-  text-align: center;
+.card-title {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.quick-grid {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.quick-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
   cursor: pointer;
   transition: transform 0.15s;
 
@@ -200,25 +149,32 @@ function handleClick(item) {
   }
 }
 
-.function-btn {
-  width: 100%;
-  height: 80px;
+.quick-btn {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  border-radius: 10px;
+}
 
-  .btn-label {
-    font-size: 13px;
-    line-height: 1;
+.quick-label {
+  font-size: 12px;
+  color: #606266;
+  white-space: nowrap;
+}
+
+.tip-card {
+  :deep(.el-card__body) {
+    padding: 14px 20px;
   }
 }
 
-.btn-desc {
-  margin: 6px 0 0;
-  font-size: 12px;
-  color: #999;
+.tip-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #909399;
 }
 </style>
