@@ -21,9 +21,7 @@
         </el-form-item>
         <el-form-item label="车型">
           <el-select v-model="sessionSearch.licenseType" placeholder="全部车型" clearable style="width: 100px">
-            <el-option label="C1" value="C1" />
-            <el-option label="C2" value="C2" />
-            <el-option label="B1" value="B1" />
+            <el-option v-for="t in licenseTypes" :key="t" :label="t" :value="t" />
           </el-select>
         </el-form-item>
         <el-form-item label="日期">
@@ -189,6 +187,8 @@ import { getExamSessionList, createExamRegistration, getStudentExamRegistrations
 import { useUserStore } from '@/stores/user'
 
 const userStore = useUserStore()
+
+const licenseTypes = ['C1', 'C2', 'C5', 'C6', 'B1', 'B2', 'A1', 'A2', 'A3', 'D', 'E', 'F', 'M', 'N', 'P']
 
 // ---- 考试场次 ----
 const sessionList = ref([])

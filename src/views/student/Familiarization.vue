@@ -16,10 +16,7 @@
         </el-form-item>
         <el-form-item label="车型">
           <el-select v-model="searchForm.licenseType" placeholder="全部车型" clearable style="width: 120px">
-            <el-option label="C1" value="C1" />
-            <el-option label="C2" value="C2" />
-            <el-option label="B1" value="B1" />
-            <el-option label="C5" value="C5" />
+            <el-option v-for="t in licenseTypes" :key="t" :label="t" :value="t" />
           </el-select>
         </el-form-item>
         <el-form-item label="日期范围">
@@ -191,6 +188,8 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowDown, Refresh } from '@element-plus/icons-vue'
 import { getExamSessionList } from '@/api/exam'
 import { applyFamiliarization, payFamiliarization, getMyFamiliarizations, CarType } from '@/api/familiarization'
+
+const licenseTypes = ['C1', 'C2', 'C5', 'C6', 'B1', 'B2', 'A1', 'A2', 'A3', 'D', 'E', 'F', 'M', 'N', 'P']
 
 const sessionList = ref([])
 const sessionLoading = ref(false)

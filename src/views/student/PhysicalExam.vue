@@ -18,12 +18,7 @@
         </el-form-item>
         <el-form-item label="关联车型" prop="licenseType">
           <el-select v-model="applyForm.licenseType" placeholder="默认为您当前的报考车型" clearable style="width: 200px">
-            <el-option label="C1" value="C1" />
-            <el-option label="C2" value="C2" />
-            <el-option label="B1" value="B1" />
-            <el-option label="B2" value="B2" />
-            <el-option label="A1" value="A1" />
-            <el-option label="A3" value="A3" />
+            <el-option v-for="t in licenseTypes" :key="t" :label="t" :value="t" />
           </el-select>
           <div style="color: #909399; font-size: 12px; margin-top: 4px">
             增驾场景请选择目标车型；留空则默认当前报考车型
@@ -113,6 +108,8 @@ const loading = ref(false)
 const venueOptions = ref([])
 
 // 申请表单
+const licenseTypes = ['C1', 'C2', 'C5', 'C6', 'B1', 'B2', 'A1', 'A2', 'A3', 'D', 'E', 'F', 'M', 'N', 'P']
+
 const applyFormRef = ref()
 const applyForm = reactive({ venueId: null, examDate: '', licenseType: '' })
 const applyLoading = ref(false)

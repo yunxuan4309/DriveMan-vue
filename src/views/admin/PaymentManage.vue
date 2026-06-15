@@ -19,12 +19,7 @@
         </el-form-item>
         <el-form-item label="车型">
           <el-select v-model="outstandingSearchForm.licenseType" placeholder="全部" clearable style="width: 100px" @change="searchOutstanding">
-            <el-option label="C1" value="C1" />
-            <el-option label="C2" value="C2" />
-            <el-option label="B1" value="B1" />
-            <el-option label="N1" value="N1" />
-            <el-option label="N2" value="N2" />
-            <el-option label="N3" value="N3" />
+            <el-option v-for="t in licenseTypes" :key="t" :label="t" :value="t" />
           </el-select>
         </el-form-item>
         <el-form-item label="业务类型">
@@ -334,6 +329,8 @@ const outstandingSearchForm = reactive({
   bizType: '',
 })
 
+const licenseTypes = ['C1', 'C2', 'C5', 'C6', 'B1', 'B2', 'A1', 'A2', 'A3', 'D', 'E', 'F', 'M', 'N', 'P']
+
 const createDialogVisible = ref(false)
 const createFormRef = ref(null)
 const createForm = reactive({
@@ -361,6 +358,7 @@ function getBizTypeTagType(bizType) {
     [BizType.EXAM_FEE]: 'warning',
     [BizType.FAMILIARIZATION_FEE]: 'primary',
     [BizType.TRAINING_FEE]: 'warning',
+    [BizType.UPGRADE_FEE]: 'primary',
     [BizType.OTHER]: 'info',
   }
   return map[bizType] || 'info'
@@ -372,6 +370,7 @@ function getBizTypeText(bizType) {
     [BizType.EXAM_FEE]: '考试费',
     [BizType.FAMILIARIZATION_FEE]: '合场费',
     [BizType.TRAINING_FEE]: '二次培训费',
+    [BizType.UPGRADE_FEE]: '增驾费',
     [BizType.OTHER]: '其他',
   }
   return map[bizType] || bizType || '未知'

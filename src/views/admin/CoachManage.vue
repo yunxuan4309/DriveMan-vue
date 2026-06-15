@@ -20,12 +20,7 @@
         </el-form-item>
         <el-form-item label="准驾车型">
           <el-select v-model="searchForm.vehicleType" placeholder="全部车型" clearable style="width: 120px">
-            <el-option label="C1" value="C1" />
-            <el-option label="C2" value="C2" />
-            <el-option label="B1" value="B1" />
-            <el-option label="B2" value="B2" />
-            <el-option label="A1" value="A1" />
-            <el-option label="A2" value="A2" />
+            <el-option v-for="t in licenseTypes" :key="t" :label="t" :value="t" />
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -121,12 +116,7 @@
         </el-form-item>
         <el-form-item label="准驾车型" prop="vehicleType">
           <el-checkbox-group v-model="selectedVehicleTypes">
-            <el-checkbox label="C1">C1</el-checkbox>
-            <el-checkbox label="C2">C2</el-checkbox>
-            <el-checkbox label="B1">B1</el-checkbox>
-            <el-checkbox label="B2">B2</el-checkbox>
-            <el-checkbox label="A1">A1</el-checkbox>
-            <el-checkbox label="A2">A2</el-checkbox>
+            <el-checkbox v-for="t in licenseTypes" :key="t" :label="t">{{ t }}</el-checkbox>
           </el-checkbox-group>
         </el-form-item>
       </el-form>
@@ -173,6 +163,8 @@ const searchForm = reactive({
   realName: '',
   vehicleType: '',
 })
+
+const licenseTypes = ['C1', 'C2', 'C5', 'C6', 'B1', 'B2', 'A1', 'A2', 'A3', 'D', 'E', 'F', 'M', 'N', 'P']
 
 // 分页
 const pagination = reactive({

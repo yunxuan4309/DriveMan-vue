@@ -22,13 +22,7 @@
         </el-form-item>
         <el-form-item label="车型">
           <el-select v-model="searchForm.licenseType" placeholder="全部车型" clearable style="width: 120px">
-            <el-option label="C1" value="C1" />
-            <el-option label="C2" value="C2" />
-            <el-option label="B1" value="B1" />
-            <el-option label="B2" value="B2" />
-            <el-option label="N1" value="N1" />
-            <el-option label="N2" value="N2" />
-            <el-option label="N3" value="N3" />
+            <el-option v-for="t in licenseTypes" :key="t" :label="t" :value="t" />
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -105,13 +99,7 @@
         </el-form-item>
         <el-form-item label="适用车型" prop="licenseType">
           <el-select v-model="form.licenseType" placeholder="请选择适用车型" style="width: 100%">
-            <el-option label="C1" value="C1" />
-            <el-option label="C2" value="C2" />
-            <el-option label="B1" value="B1" />
-            <el-option label="B2" value="B2" />
-            <el-option label="N1" value="N1" />
-            <el-option label="N2" value="N2" />
-            <el-option label="N3" value="N3" />
+            <el-option v-for="t in licenseTypes" :key="t" :label="t" :value="t" />
           </el-select>
         </el-form-item>
         <el-form-item label="考试日期" prop="examDate">
@@ -163,6 +151,8 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Edit, Delete } from '@element-plus/icons-vue'
 import { getExamSessionList, createExamSession, updateExamSession, deleteExamSession } from '@/api/exam'
 import { getExamVenueList } from '@/api/examVenue'
+
+const licenseTypes = ['C1', 'C2', 'C5', 'C6', 'B1', 'B2', 'A1', 'A2', 'A3', 'D', 'E', 'F', 'M', 'N', 'P']
 
 const sessionList = ref([])
 const loading = ref(false)

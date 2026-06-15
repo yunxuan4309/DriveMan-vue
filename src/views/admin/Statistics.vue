@@ -80,14 +80,7 @@
               <span>教练效能排名</span>
               <div class="header-actions">
                 <el-select v-model="coachFilters.licenseType" placeholder="全部车型" clearable style="width: 110px" @change="fetchCoachWorkload">
-                  <el-option label="C1" value="C1" />
-                  <el-option label="C2" value="C2" />
-                  <el-option label="C3" value="C3" />
-                  <el-option label="B1" value="B1" />
-                  <el-option label="B2" value="B2" />
-                  <el-option label="A1" value="A1" />
-                  <el-option label="A2" value="A2" />
-                  <el-option label="A3" value="A3" />
+                  <el-option v-for="t in licenseTypes" :key="t" :label="t" :value="t" />
                 </el-select>
                 <el-input-number v-model="coachFilters.topN" :min="1" :max="100" placeholder="Top" style="width: 100px" controls-position="right" @change="fetchCoachWorkload" />
                 <el-button text type="primary" @click="handleExport('coach')" :icon="Download" :loading="exporting.coach">导出</el-button>
@@ -157,6 +150,8 @@ import {
   exportCoachWorkload,
   exportRevenueSummary,
 } from '@/api/statistics'
+
+const licenseTypes = ['C1', 'C2', 'C5', 'C6', 'B1', 'B2', 'A1', 'A2', 'A3', 'D', 'E', 'F', 'M', 'N', 'P']
 
 // 图表 refs
 const registrationTrendRef = ref(null)

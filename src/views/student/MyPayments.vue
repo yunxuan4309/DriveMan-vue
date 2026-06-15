@@ -149,6 +149,7 @@ function getBizTypeTagType(bizType) {
     [BizType.REGISTRATION_FEE]: 'success',
     [BizType.EXAM_FEE]: 'warning',
     [BizType.FAMILIARIZATION_FEE]: 'primary',
+    [BizType.UPGRADE_FEE]: 'primary',
     [BizType.OTHER]: 'info',
   }
   return map[bizType] || 'info'
@@ -159,6 +160,7 @@ function getBizTypeText(bizType) {
     [BizType.REGISTRATION_FEE]: '报名费',
     [BizType.EXAM_FEE]: '考试费',
     [BizType.FAMILIARIZATION_FEE]: '合场费',
+    [BizType.UPGRADE_FEE]: '增驾费',
     [BizType.OTHER]: '其他',
   }
   return map[bizType] || bizType || '未知'

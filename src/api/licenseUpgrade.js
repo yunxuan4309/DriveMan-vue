@@ -24,17 +24,18 @@ export function auditLicenseUpgrade(id, data) {
   const params = new URLSearchParams()
   params.append('status', data.status)
   if (data.remark) params.append('remark', data.remark)
+  if (data.skipSubjects) params.append('skipSubjects', data.skipSubjects)
   return request.put(`/license-upgrades/${id}/audit`, params, {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   })
 }
 
-// 管理员录入增驾考试成绩
-export function setLicenseUpgradeExamResult(id, data) {
-  const params = new URLSearchParams()
-  params.append('examStatus', data.examStatus)
-  if (data.examRemark) params.append('examRemark', data.examRemark)
-  return request.put(`/license-upgrades/${id}/exam-result`, params, {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-  })
+// 查询增驾进度
+export function getUpgradeProgress(id) {
+  return request.get(`/license-upgrades/${id}/progress`)
+}
+
+// 完成增驾（检查缴费+科目通过后更新学员车型）
+export function completeLicenseUpgrade(id) {
+  return request.post(`/license-upgrades/${id}/complete`)
 }

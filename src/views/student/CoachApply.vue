@@ -62,9 +62,7 @@
             </el-form-item>
             <el-form-item label="车型">
               <el-select v-model="searchForm.vehicleType" placeholder="全部" clearable style="width: 100px">
-                <el-option label="C1" value="C1" />
-                <el-option label="C2" value="C2" />
-                <el-option label="B1" value="B1" />
+                <el-option v-for="t in licenseTypes" :key="t" :label="t" :value="t" />
               </el-select>
             </el-form-item>
             <el-form-item label="评分">
@@ -208,6 +206,8 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Refresh, UserFilled } from '@element-plus/icons-vue'
 import { getCoachList, applyCoach, getStudentApplications, getMyCoach, recommendCoaches } from '@/api/coach'
 import { useUserStore } from '@/stores/user'
+
+const licenseTypes = ['C1', 'C2', 'C5', 'C6', 'B1', 'B2', 'A1', 'A2', 'A3', 'D', 'E', 'F', 'M', 'N', 'P']
 
 const userStore = useUserStore()
 const myCoachLoading = ref(false)

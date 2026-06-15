@@ -17,10 +17,7 @@
         </el-form-item>
         <el-form-item label="车型">
           <el-select v-model="searchForm.licenseType" placeholder="全部车型" clearable style="width: 120px">
-            <el-option label="C1" value="C1" />
-            <el-option label="C2" value="C2" />
-            <el-option label="B1" value="B1" />
-            <el-option label="B2" value="B2" />
+            <el-option v-for="t in licenseTypes" :key="t" :label="t" :value="t" />
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -79,6 +76,8 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { getExamSessionList } from '@/api/exam'
+
+const licenseTypes = ['C1', 'C2', 'C5', 'C6', 'B1', 'B2', 'A1', 'A2', 'A3', 'D', 'E', 'F', 'M', 'N', 'P']
 
 const sessionList = ref([])
 const loading = ref(false)

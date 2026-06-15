@@ -26,10 +26,7 @@
         </el-form-item>
         <el-form-item label="驾照类型">
           <el-select v-model="searchForm.licenseType" placeholder="全部车型" clearable style="width: 120px">
-            <el-option label="C1" value="C1" />
-            <el-option label="C2" value="C2" />
-            <el-option label="B1" value="B1" />
-            <el-option label="C5" value="C5" />
+            <el-option v-for="t in licenseTypes" :key="t" :label="t" :value="t" />
           </el-select>
         </el-form-item>
         <el-form-item label="结业状态">
@@ -157,12 +154,7 @@
         </el-form-item>
         <el-form-item label="驾照类型" prop="licenseType">
           <el-select v-model="form.licenseType" placeholder="请选择驾照类型" style="width: 100%">
-            <el-option label="C1" value="C1" />
-            <el-option label="C2" value="C2" />
-            <el-option label="B1" value="B1" />
-            <el-option label="B2" value="B2" />
-            <el-option label="A1" value="A1" />
-            <el-option label="A2" value="A2" />
+            <el-option v-for="t in licenseTypes" :key="t" :label="t" :value="t" />
           </el-select>
         </el-form-item>
       </el-form>
@@ -243,6 +235,8 @@ const searchForm = reactive({
   status: undefined,
   address: '',
 })
+
+const licenseTypes = ['C1', 'C2', 'C5', 'C6', 'B1', 'B2', 'A1', 'A2', 'A3', 'D', 'E', 'F', 'M', 'N', 'P']
 
 // 分页
 const pagination = reactive({

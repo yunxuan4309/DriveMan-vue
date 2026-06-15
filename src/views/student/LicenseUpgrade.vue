@@ -59,7 +59,8 @@
           </el-upload>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="handleApply" :loading="applyLoading">提交申请</el-button>
+          <el-button type="primary" @click="handleApply(false)" :loading="applyLoading">提交申请</el-button>
+          <el-button v-if="applyForm.upgradeType === 2" type="warning" @click="handleApply(true)" :loading="demoLoading">演示申请(跳过驾龄)</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -96,11 +97,29 @@
             <el-tag :type="getStatusTag(row.status)" size="small">{{ getStatusText(row.status) }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="考试状态" width="110" align="center">
+        <el-table-column label="考试进度" width="180" align="center">
           <template #default="{ row }">
-            <el-tag v-if="row.status === 1" :type="getExamStatusTag(row.examStatus)" size="small">
-              {{ getExamStatusText(row.examStatus) }}
-            </el-tag>
+            <template v-if="row.status === 1">
+              <template v-if="row.examStatus === 1">
+                <el-tag type="success" size="small">已完成</el-tag>
+              </template>
+              <template v-else>
+                <div style="font-size: 12px">
+                  <el-tag v-if="row.skipSubjects" type="info" size="small" style="margin: 1px">免{{ row.skipSubjects }}</el-tag>
+                  <span style="color: #909399">待考试</span>
+                </div>
+              </template>
+            </template>
+            <span v-else class="text-gray">-</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="缴费状态" width="100" align="center">
+          <template #default="{ row }">
+            <template v-if="row.status === 1 && row.examStatus !== 1">
+              <el-tag v-if="row._payStatus === 'paid'" type="success" size="small">已缴费</el-tag>
+              <el-tag v-else-if="row._payStatus === 'unpaid'" type="danger" size="small">待缴费</el-tag>
+              <span v-else class="text-gray">-</span>
+            </template>
             <span v-else class="text-gray">-</span>
           </template>
         </el-table-column>
@@ -114,7 +133,45 @@
             {{ formatDateTime(row.createTime) }}
           </template>
         </el-table-column>
+        <el-table-column label="操作" width="120" align="center">
+          <template #default="{ row }">
+            <template v-if="row.status === 1 && row.examStatus !== 1">
+              <el-button v-if="row._payStatus === 'unpaid'" type="warning" size="small" @click="handlePay(row)">
+                去缴费
+              </el-button>
+              <el-button v-else-if="row._payStatus === 'paid'" type="primary" size="small" @click="goExamRegister">
+                去报名考试
+              </el-button>
+              <el-tag v-else type="info" size="small">处理中</el-tag>
+            </template>
+            <span v-else class="text-gray">-</span>
+          </template>
+        </el-table-column>
       </el-table>
+
+      <!-- 当前进行中的增驾进度指引 -->
+      <template v-if="activeUpgrade">
+        <el-divider />
+        <div class="progress-guide">
+          <h4>当前增驾进度（{{ activeUpgrade.originalLicense }} → {{ activeUpgrade.targetLicense }}）</h4>
+          <el-steps :active="activeStepIndex" align-center style="margin: 20px 0">
+            <el-step title="提交申请" description="已提交" />
+            <el-step title="审核通过" :description="activeUpgrade.status === 1 ? '已通过' : '待审核'" />
+            <el-step title="缴纳增驾费" :description="activeUpgrade._payStatus === 'paid' ? '已缴费' : '待缴费'" />
+            <el-step title="参加考试" description="未免考科目" />
+            <el-step title="完成增驾" description="更新车型" />
+          </el-steps>
+
+          <el-alert
+            :type="activeAlertType"
+            :title="activeAlertTitle"
+            :description="activeAlertDesc"
+            show-icon
+            :closable="false"
+            style="margin-top: 10px"
+          />
+        </div>
+      </template>
 
       <el-empty v-if="!loading && recordList.length === 0" description="暂无增驾申请记录" style="margin-top: 30px" />
     </el-card>
@@ -122,22 +179,27 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Refresh } from '@element-plus/icons-vue'
+import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { uploadFile } from '@/api/file'
 import { applyLicenseUpgrade, getMyLicenseUpgrades } from '@/api/licenseUpgrade'
+import { getMyPaymentRecords, payMyPaymentRecord } from '@/api/payment'
 
+const router = useRouter()
 const userStore = useUserStore()
 
 const recordList = ref([])
+const paymentMap = ref({})
 const loading = ref(false)
 
 // 申请表单
 const applyFormRef = ref()
 const applyForm = reactive({ targetLicense: '', upgradeType: 1, licenseFileId: null })
 const applyLoading = ref(false)
+const demoLoading = ref(false)
 const licenseFileName = ref('')
 
 const applyRules = {
@@ -145,11 +207,74 @@ const applyRules = {
   upgradeType: [{ required: true, message: '请选择增驾类型', trigger: 'change' }],
 }
 
+// ====== 进度指引 ======
+
+const activeUpgrade = computed(() => {
+  return recordList.value.find(r => r.status === 1 && r.examStatus !== 1) || null
+})
+
+const activeStepIndex = computed(() => {
+  if (!activeUpgrade.value) return 0
+  const r = activeUpgrade.value
+  if (r.status !== 1) return 1 // 待审核
+  if (r._payStatus !== 'paid') return 2 // 待缴费
+  return 3 // 待考试
+})
+
+const activeAlertType = computed(() => {
+  if (!activeUpgrade.value) return 'info'
+  const r = activeUpgrade.value
+  if (r._payStatus !== 'paid') return 'warning'
+  return 'primary'
+})
+
+const activeAlertTitle = computed(() => {
+  if (!activeUpgrade.value) return ''
+  const r = activeUpgrade.value
+  if (r._payStatus !== 'paid') return '请缴纳增驾套餐费'
+  if (r.skipSubjects) return '免考科目' + r.skipSubjects + '，其余科目请报名考试'
+  return '请报名参加全部科目考试'
+})
+
+const activeAlertDesc = computed(() => {
+  if (!activeUpgrade.value) return ''
+  const r = activeUpgrade.value
+  if (r._payStatus !== 'paid') return '增驾申请已通过审核，请先缴纳增驾费用后再进行考试报名'
+  if (r.skipSubjects) return '以下科目已免考通过：科目' + r.skipSubjects.split(',').join('、') + '。请到"考试报名"处预约未免考科目的考试场次'
+  return '请到"考试报名"处预约各科目考试场次'
+})
+
+// ====== 方法 ======
+
 async function fetchList() {
   loading.value = true
   try {
-    const res = await getMyLicenseUpgrades()
-    recordList.value = Array.isArray(res) ? res : []
+    const [upgrades, payments] = await Promise.all([
+      getMyLicenseUpgrades(),
+      getMyPaymentRecords().catch(() => []),
+    ])
+
+    const list = Array.isArray(upgrades) ? upgrades : []
+    const payArr = Array.isArray(payments) ? payments : []
+
+    // 构建 paymentMap: license_upgrade_id → status
+    const pmap = {}
+    payArr.forEach(p => {
+      if (p.bizType === 'upgrade_fee' && p.bizId) {
+        pmap[p.bizId] = pmap[p.bizId] || []
+        pmap[p.bizId].push(p)
+      }
+    })
+    paymentMap.value = pmap
+
+    // 富化每行记录的支付状态
+    list.forEach(r => {
+      const pays = pmap[r.id] || []
+      const paid = pays.some(p => p.status === 1)
+      r._payStatus = paid ? 'paid' : (pays.length > 0 ? 'unpaid' : 'unknown')
+    })
+
+    recordList.value = list
   } catch (error) {
     console.error('获取增驾记录失败:', error)
     recordList.value = []
@@ -160,41 +285,39 @@ async function fetchList() {
 
 function handleFileChange(uploadFile) {
   licenseFileName.value = uploadFile.name
-  applyForm.licenseFileId = null // will set after upload
-  // 暂存文件对象，提交时上传
+  applyForm.licenseFileId = null
   applyForm._file = uploadFile.raw
 }
 
-async function handleApply() {
+async function handleApply(skipAgeCheck = false) {
   const valid = await applyFormRef.value.validate().catch(() => false)
   if (!valid) return
 
-  // 如果选择了文件，先上传
-  let licenseFileId = null
-  if (applyForm._file) {
-    applyLoading.value = true
-    try {
-      const uploadRes = await uploadFile(userStore.userId, applyForm._file, 'image', 'license_upgrade')
-      licenseFileId = uploadRes?.fileId || uploadRes?.id || uploadRes
-    } catch (error) {
-      console.error('上传驾驶证材料失败:', error)
-      ElMessage.error('驾驶证材料上传失败')
-      applyLoading.value = false
-      return
-    }
-  }
-
-  applyLoading.value = true
+  const loading = skipAgeCheck ? demoLoading : applyLoading
+  loading.value = true
   try {
+    let licenseFileId = null
+    if (applyForm._file) {
+      try {
+        const uploadRes = await uploadFile(userStore.userId, applyForm._file, 'image', 'license_upgrade')
+        licenseFileId = uploadRes?.fileId || uploadRes?.id || uploadRes
+      } catch (error) {
+        console.error('上传驾驶证材料失败:', error)
+        ElMessage.error('驾驶证材料上传失败')
+        loading.value = false
+        return
+      }
+    }
+
     const data = {
       targetLicense: applyForm.targetLicense,
       upgradeType: applyForm.upgradeType,
     }
-    if (licenseFileId) {
-      data.licenseFileId = licenseFileId
-    }
+    if (licenseFileId) data.licenseFileId = licenseFileId
+    if (skipAgeCheck) data.skipAgeCheck = true
+
     await applyLicenseUpgrade(data)
-    ElMessage.success('增驾申请已提交')
+    ElMessage.success(skipAgeCheck ? '演示申请已提交（已跳过驾龄校验）' : '增驾申请已提交')
     applyForm.targetLicense = ''
     applyForm.upgradeType = 1
     applyForm.licenseFileId = null
@@ -204,8 +327,28 @@ async function handleApply() {
   } catch (error) {
     console.error('提交失败:', error)
   } finally {
-    applyLoading.value = false
+    loading.value = false
   }
+}
+
+async function handlePay(row) {
+  try {
+    const pays = paymentMap.value[row.id] || []
+    const pending = pays.find(p => p.status === 0)
+    if (pending) {
+      await payMyPaymentRecord(pending.id)
+      ElMessage.success('增驾费已支付成功')
+      fetchList()
+    } else {
+      ElMessage.info('暂无待支付的增驾账单，请联系管理员')
+    }
+  } catch (error) {
+    console.error('支付失败:', error)
+  }
+}
+
+function goExamRegister() {
+  router.push('/student/exam-registration')
 }
 
 function getStatusTag(status) {
@@ -216,16 +359,6 @@ function getStatusTag(status) {
 function getStatusText(status) {
   const map = { 0: '待审核', 1: '审核通过', 2: '审核不通过' }
   return map[status] || '未知'
-}
-
-function getExamStatusTag(examStatus) {
-  const map = { 0: 'info', 1: 'success', 2: 'danger' }
-  return map[examStatus] || 'info'
-}
-
-function getExamStatusText(examStatus) {
-  const map = { 0: '待考试', 1: '考试通过', 2: '考试不通过' }
-  return map[examStatus] || '-'
 }
 
 function formatDateTime(dateTime) {
@@ -248,5 +381,12 @@ onMounted(fetchList)
 
 .text-gray {
   color: #909399;
+}
+.progress-guide {
+  padding: 0 10px 10px;
+}
+.progress-guide h4 {
+  margin: 0 0 10px;
+  color: #303133;
 }
 </style>

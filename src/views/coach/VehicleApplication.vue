@@ -30,7 +30,7 @@
               {{ type }}
             </el-checkbox>
           </el-checkbox-group>
-          <div class="form-tip">可多选，系统支持车型：C1、C2、B1、N1、N2、N3</div>
+          <div class="form-tip">可多选</div>
         </el-form-item>
         <el-form-item label="申请理由" prop="applyReason">
           <el-input
@@ -115,7 +115,8 @@ const loading = ref(false)
 const currentVehicleType = ref('')
 const applicationList = ref([])
 
-const availableVehicleTypes = ['C1', 'C2', 'B1', 'N1', 'N2', 'N3']
+const licenseTypes = ['C1', 'C2', 'C5', 'C6', 'B1', 'B2', 'A1', 'A2', 'A3', 'D', 'E', 'F', 'M', 'N', 'P']
+const availableVehicleTypes = licenseTypes
 
 const applyForm = reactive({
   requestedVehicleType: [],

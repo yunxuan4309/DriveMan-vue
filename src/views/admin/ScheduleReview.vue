@@ -21,12 +21,7 @@
         </el-form-item>
         <el-form-item label="车型">
           <el-select v-model="searchForm.licenseType" placeholder="全部" clearable style="width: 100px" @change="fetchList">
-            <el-option label="C1" value="C1" />
-            <el-option label="C2" value="C2" />
-            <el-option label="B1" value="B1" />
-            <el-option label="N1" value="N1" />
-            <el-option label="N2" value="N2" />
-            <el-option label="N3" value="N3" />
+            <el-option v-for="t in licenseTypes" :key="t" :label="t" :value="t" />
           </el-select>
         </el-form-item>
         <el-form-item label="状态">
@@ -158,6 +153,8 @@ const searchForm = reactive({
   page: 1, size: 10, keyword: '', plateNumber: '', venueName: '',
   licenseType: '', status: undefined, dateRange: null,
 })
+
+const licenseTypes = ['C1', 'C2', 'C5', 'C6', 'B1', 'B2', 'A1', 'A2', 'A3', 'D', 'E', 'F', 'M', 'N', 'P']
 
 const currentId = ref(null)
 // auditMode: 'create'=新建排班审核, 'cancel'=取消申请审核

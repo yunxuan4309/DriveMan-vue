@@ -8,9 +8,7 @@
       <el-form :model="applyForm" :rules="applyRules" ref="applyFormRef" label-width="120px">
         <el-form-item label="培训车型" prop="licenseType">
           <el-select v-model="applyForm.licenseType" placeholder="请选择" style="width: 200px">
-            <el-option label="C1" value="C1" />
-            <el-option label="C2" value="C2" />
-            <el-option label="B1" value="B1" />
+            <el-option v-for="t in licenseTypes" :key="t" :label="t" :value="t" />
           </el-select>
         </el-form-item>
         <el-form-item label="培训科目" prop="subject">
@@ -60,9 +58,7 @@
       <el-form :model="filterForm" layout="inline" style="margin-bottom: 16px">
         <el-form-item label="培训车型">
           <el-select v-model="filterForm.licenseType" placeholder="全部车型" clearable style="width: 120px" @change="fetchSchedules">
-            <el-option label="C1" value="C1" />
-            <el-option label="C2" value="C2" />
-            <el-option label="B1" value="B1" />
+            <el-option v-for="t in licenseTypes" :key="t" :label="t" :value="t" />
           </el-select>
         </el-form-item>
         <el-form-item label="状态">
@@ -176,6 +172,8 @@ import { Refresh } from '@element-plus/icons-vue'
 import { getAvailableVehicles } from '@/api/vehicle'
 import { getVenueList } from '@/api/venue'
 import { createSchedule, getMySchedules, cancelSchedule } from '@/api/schedule'
+
+const licenseTypes = ['C1', 'C2', 'C5', 'C6', 'B1', 'B2', 'A1', 'A2', 'A3', 'D', 'E', 'F', 'M', 'N', 'P']
 
 const applyFormRef = ref()
 const applyForm = reactive({
