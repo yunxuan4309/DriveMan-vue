@@ -7,6 +7,7 @@
           <value>
             <TabSessionState>
               <option name="provider" value="claude" />
+              <option name="sessionId" value="42693c93-5721-4281-950b-da9c9ed69cc8" />
               <option name="cwd" value="$PROJECT_DIR$" />
               <option name="model" value="claude-haiku-4-5" />
               <option name="permissionMode" value="acceptEdits" />
