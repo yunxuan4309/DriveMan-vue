@@ -12,7 +12,7 @@
             <el-tag size="small" type="primary">{{ row.subjectName || '科目' + row.subject }}</el-tag>
           </template>
         </el-table-column>
-<el-table-column label="考试日期" width="120" align="center">
+        <el-table-column label="考试日期" width="120" align="center">
           <template #default="{ row }">
             {{ row.examDate || '-' }}
           </template>
