@@ -11,7 +11,17 @@
         <el-table-column prop="username" label="用户名" width="120" />
         <el-table-column prop="idCard" label="身份证号" width="180" show-overflow-tooltip />
         <el-table-column prop="phone" label="手机号" width="140" />
-        <el-table-column prop="licenseType" label="驾照类型" width="100" align="center" />
+        <el-table-column prop="licenseType" label="驾照类型" width="100" align="center">
+          <template #default="{ row }">
+            <el-tag size="small" :type="row.role === 0 ? 'warning' : 'info'">{{ row.licenseType || '-' }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="类型" width="100" align="center">
+          <template #default="{ row }">
+            <el-tag v-if="row.role === 0" size="small" type="warning">首次报名审核</el-tag>
+            <el-tag v-else size="small" type="info">学员审核</el-tag>
+          </template>
+        </el-table-column>
         <el-table-column prop="createTime" label="申请时间" width="160">
           <template #default="{ row }">
             {{ formatDateTime(row.createTime) }}

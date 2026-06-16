@@ -110,6 +110,18 @@ const routes = [
         component: () => import('@/views/student/MyFileRequests.vue'),
         meta: { title: '我的文件请求', roles: [1] },
       },
+      {
+        path: 'disability-info',
+        name: 'StudentDisabilityInfo',
+        component: () => import('@/views/student/DisabilityInfo.vue'),
+        meta: { title: '残疾信息', roles: [1] },
+      },
+      {
+        path: 'special-record',
+        name: 'StudentSpecialRecord',
+        component: () => import('@/views/student/SpecialPersonRecord.vue'),
+        meta: { title: '特殊人群记录', roles: [1] },
+      },
     ],
   },
   // ── 教练功能路由 ─────────────────────────────────────
@@ -320,6 +332,18 @@ const routes = [
         name: 'FileRequestManage',
         component: () => import('@/views/admin/FileRequestManage.vue'),
         meta: { title: '文件请求管理', roles: [3] },
+      },
+      {
+        path: 'disability-info-manage',
+        name: 'DisabilityInfoManage',
+        component: () => import('@/views/admin/DisabilityInfoManage.vue'),
+        meta: { title: '残疾信息管理', roles: [3] },
+      },
+      {
+        path: 'special-record-manage',
+        name: 'SpecialPersonRecordManage',
+        component: () => import('@/views/admin/SpecialPersonRecordManage.vue'),
+        meta: { title: '特殊人群记录管理', roles: [3] },
       },
     ],
   },

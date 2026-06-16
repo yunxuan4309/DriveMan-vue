@@ -71,6 +71,8 @@ const admin = [
       { title: '二次培训管理', icon: 'Refresh', route: '/admin/retake-training' },
       { title: '体检管理', icon: 'Notebook', route: '/admin/physical-exam-manage' },
       { title: '增驾申请管理', icon: 'Top', route: '/admin/license-upgrade-manage' },
+      { title: '残疾信息管理', icon: 'WarningFilled', route: '/admin/disability-info-manage' },
+      { title: '特殊人群记录管理', icon: 'Document', route: '/admin/special-record-manage' },
     ],
   },
 ]
@@ -95,6 +97,8 @@ const student = [
       { title: '增驾申请', icon: 'Top', route: '/student/license-upgrade' },
       { title: '体检申请', icon: 'Notebook', route: '/student/physical-exam' },
       { title: '合场申请', icon: 'Aim', route: '/student/familiarization' },
+      { title: '残疾信息', icon: 'WarningFilled', route: '/student/disability-info' },
+      { title: '特殊人群记录', icon: 'Document', route: '/student/special-record' },
     ],
   },
   {
