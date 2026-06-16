@@ -67,6 +67,7 @@ const admin = [
     icon: 'Setting',
     children: [
       { title: '系统配置', icon: 'Tools', route: '/admin/system-config' },
+      { title: '公告管理', icon: 'Bell', route: '/admin/notices' },
       { title: '车型科目配置', icon: 'RefreshRight', route: '/admin/license-configs' },
       { title: '二次培训管理', icon: 'Refresh', route: '/admin/retake-training' },
       { title: '体检管理', icon: 'Notebook', route: '/admin/physical-exam-manage' },

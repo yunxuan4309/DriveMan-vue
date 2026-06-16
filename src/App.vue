@@ -29,9 +29,6 @@
         <router-view />
       </el-main>
     </el-container>
-
-    <!-- 全局文件预览对话框 -->
-    <FilePreviewDialog />
   </el-container>
 </template>
 
@@ -42,7 +39,6 @@ import { useUserStore } from '@/stores/user'
 import { getPendingFileRequestCount } from '@/api/fileRequest'
 import SidebarMenu from '@/components/SidebarMenu.vue'
 import TopHeader from '@/components/TopHeader.vue'
-import FilePreviewDialog from '@/components/FilePreviewDialog.vue'
 
 const route = useRoute()
 const router = useRouter()
