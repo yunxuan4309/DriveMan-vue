@@ -13,6 +13,25 @@
       <el-button type="primary" style="margin-top: 12px" @click="$router.push('/')">返回首页</el-button>
     </el-alert>
 
+    <!-- C5 待审核提示 -->
+    <el-alert
+      v-else-if="pendingAudit"
+      title="报名已提交，等待管理员审核"
+      type="warning"
+      :closable="false"
+      show-icon
+      class="status-alert"
+    >
+      <p style="margin: 4px 0">
+        报考车型：<el-tag size="small" type="warning">{{ pendingAudit.licenseType }}</el-tag>
+        &nbsp; 说明：该车型需要管理员审核残疾信息
+      </p>
+      <p style="margin: 4px 0; color: #909399; font-size: 13px">
+        审核通过后，您将收到待支付账单，届时请完成缴费
+      </p>
+    </el-alert>
+
+    <!-- 待支付提示 -->
     <el-alert
       v-else-if="paymentInfo"
       title="报名申请已提交"
@@ -29,7 +48,7 @@
     </el-alert>
 
     <!-- 套餐选择 -->
-    <el-card v-if="!paymentInfo && !isPaid">
+    <el-card v-if="!paymentInfo && !isPaid && !pendingAudit">
       <template #header>
         <span style="font-weight: 600; font-size: 16px">选择驾考报名套餐</span>
       </template>
@@ -95,6 +114,7 @@ const loading = ref(false)
 const applyLoading = ref(false)
 const payLoading = ref(false)
 const isPaid = ref(false)
+const pendingAudit = ref(null)
 const paymentInfo = ref(null)
 const selectedPackage = ref(null)
 const packageGroups = ref([])
@@ -135,6 +155,14 @@ async function handleApply() {
       selectedPackage.value.licenseType,
       selectedPackage.value.id
     )
+    // C5 等需审核的车型 → 进入待审核状态
+    if (res.needAudit) {
+      pendingAudit.value = { licenseType: res.licenseType, message: res.message }
+      localStorage.setItem('pendingAuditLicense', res.licenseType)
+      ElMessage.success(res.message || '报名已提交，等待管理员审核')
+      return
+    }
+    // 普通车型 → 直接进入支付
     paymentInfo.value = {
       paymentId: res.paymentId,
       amount: res.amount,
@@ -184,6 +212,12 @@ async function handlePay() {
 onMounted(() => {
   if (userStore.role !== 0) {
     isPaid.value = true
+    return
+  }
+  // 恢复之前提交的 C5 待审核状态
+  const pendingLicense = localStorage.getItem('pendingAuditLicense')
+  if (pendingLicense) {
+    pendingAudit.value = { licenseType: pendingLicense, message: '您的报名正在审核中' }
     return
   }
   fetchPackages()

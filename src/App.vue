@@ -7,7 +7,6 @@
     <SidebarMenu />
     <el-container class="right-panel">
       <TopHeader />
-      <NoticeBar />
 
       <!-- 文件请求提醒横幅 -->
       <div v-if="showFileRequestBanner" class="file-request-banner">
@@ -40,7 +39,6 @@ import { useUserStore } from '@/stores/user'
 import { getPendingFileRequestCount } from '@/api/fileRequest'
 import SidebarMenu from '@/components/SidebarMenu.vue'
 import TopHeader from '@/components/TopHeader.vue'
-import NoticeBar from '@/components/NoticeBar.vue'
 
 const route = useRoute()
 const router = useRouter()
