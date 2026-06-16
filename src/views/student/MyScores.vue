@@ -9,7 +9,7 @@
         <el-table-column type="index" label="序号" width="60" align="center" />
         <el-table-column label="科目" width="90" align="center">
           <template #default="{ row }">
-            <el-tag size="small" type="primary">{{ row.subjectName || '科目' + row.subject }}</el-tag>
+            <el-tag size="small" type="primary">{{ row.subjectName ? row.subjectName : getSubjectLabel(row.subject, row.licenseType) }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column label="考试日期" width="120" align="center">
@@ -42,6 +42,11 @@
             </el-tag>
           </template>
         </el-table-column>
+        <el-table-column label="证书编号" width="150" show-overflow-tooltip v-if="showCertNo">
+          <template #default="{ row }">
+            {{ row.certNo || '-' }}
+          </template>
+        </el-table-column>
         <el-table-column label="报名时间" width="160">
           <template #default="{ row }">
             {{ formatDateTime(row.applyTime) }}
@@ -55,13 +60,22 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { getMyScores } from '@/api/exam'
 import { useUserStore } from '@/stores/user'
 
 const userStore = useUserStore()
 const scoreList = ref([])
 const loading = ref(false)
+const showCertNo = computed(() => userStore.isSpecial)
+
+const SPECIAL_TYPES = ['N1', 'N2', 'N3', 'M']
+function getSubjectLabel(subject, licenseType) {
+  if (SPECIAL_TYPES.includes(licenseType)) {
+    return subject === 1 ? '理论' : '实操'
+  }
+  return '科目' + subject
+}
 
 async function fetchScores() {
   loading.value = true

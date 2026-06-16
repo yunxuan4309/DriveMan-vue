@@ -21,9 +21,9 @@ export const LICENSE_TYPES = [
   { value: 'M', label: 'M（轮式专用机械车）' },
   { value: 'N', label: 'N（无轨电车）' },
   { value: 'P', label: 'P（有轨电车）' },
-  { value: 'N1', label: 'N1（小型新能源教练车）' },
-  { value: 'N2', label: 'N2（中型新能源教练车）' },
-  { value: 'N3', label: 'N3（大型新能源教练车）' },
+  { value: 'N1', label: 'N1（叉车）' },
+  { value: 'N2', label: 'N2（挖掘机）' },
+  { value: 'N3', label: 'N3（压路机）' },
 ]
 
 /** 车型包含关系：key 持有者可直接驾驶 value 列表中的车型 */

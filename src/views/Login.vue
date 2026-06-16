@@ -123,9 +123,9 @@
                 <el-option label="A1（大型客车）" value="A1" />
                 <el-option label="A2（牵引车）" value="A2" />
                 <el-option label="A3（城市公交车）" value="A3" />
-                <el-option label="N1（小型新能源教练车）" value="N1" />
-                <el-option label="N2（中型新能源教练车）" value="N2" />
-                <el-option label="N3（大型新能源教练车）" value="N3" />
+                <el-option label="N1（叉车）" value="N1" />
+                <el-option label="N2（挖掘机）" value="N2" />
+                <el-option label="N3（压路机）" value="N3" />
               </el-select>
             </el-form-item>
 

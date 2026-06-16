@@ -6,7 +6,13 @@ import request from './request'
 
 // 学员申请二次培训
 export function applyRetakeTraining(data) {
-  return request.post('/retake-trainings', data)
+  const params = new URLSearchParams()
+  params.append('examRegistrationId', data.examRegistrationId)
+  if (data.coachId) params.append('coachId', data.coachId)
+  if (data.reason) params.append('reason', data.reason)
+  return request.post('/retake-trainings', params, {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  })
 }
 
 // 管理员审核二次培训申请

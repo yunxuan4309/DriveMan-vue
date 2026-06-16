@@ -64,9 +64,14 @@ function toggleCollapse() {
   localStorage.setItem('sidebarCollapsed', isCollapsed.value)
 }
 
-// 根据角色获取菜单分组
+// 根据角色获取菜单分组（特种车学员隐藏不兼容菜单项）
 const menuGroups = computed(() => {
-  return menuConfig[userStore.role] || []
+  const groups = menuConfig[userStore.role] || []
+  if (!userStore.isSpecial) return groups
+  return groups.map(group => ({
+    ...group,
+    children: group.children.filter(item => !item.hideWhenSpecial)
+  })).filter(group => group.children.length > 0)
 })
 
 // 图标解析

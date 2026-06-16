@@ -16,10 +16,11 @@
           <el-input v-model="searchForm.studentName" placeholder="姓名搜索" clearable style="width: 140px" @keyup.enter="handleSearch" />
         </el-form-item>
         <el-form-item label="车型">
-          <el-select v-model="searchForm.licenseType" placeholder="全部车型" clearable style="width: 120px" @change="handleSearch">
-            <el-option label="N1" value="N1" />
-            <el-option label="N2" value="N2" />
-            <el-option label="N3" value="N3" />
+          <el-select v-model="searchForm.licenseType" placeholder="全部车型" clearable style="width: 140px" @change="handleSearch">
+            <el-option label="N1（叉车）" value="N1" />
+            <el-option label="N2（挖掘机）" value="N2" />
+            <el-option label="N3（压路机）" value="N3" />
+            <el-option label="M（轮式专用机械车）" value="M" />
           </el-select>
         </el-form-item>
         <el-form-item label="科目">
@@ -106,9 +107,10 @@
         </el-form-item>
         <el-form-item label="车型" prop="licenseType">
           <el-select v-model="form.licenseType" placeholder="请选择车型" style="width: 100%" :disabled="isEdit">
-            <el-option label="N1" value="N1" />
-            <el-option label="N2" value="N2" />
-            <el-option label="N3" value="N3" />
+            <el-option label="N1（叉车）" value="N1" />
+            <el-option label="N2（挖掘机）" value="N2" />
+            <el-option label="N3（压路机）" value="N3" />
+            <el-option label="M（轮式专用机械车）" value="M" />
           </el-select>
         </el-form-item>
         <el-form-item label="科目" prop="subject">

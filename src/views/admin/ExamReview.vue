@@ -27,9 +27,9 @@
       <el-table :data="regList" v-loading="loading" border stripe>
         <el-table-column type="index" label="序号" width="60" align="center" />
         <el-table-column prop="studentName" label="学员姓名" width="100" />
-        <el-table-column label="科目" width="80" align="center">
+        <el-table-column label="科目" width="100" align="center">
           <template #default="{ row }">
-            <el-tag size="small" type="primary">科目{{ row.subject }}</el-tag>
+            <el-tag size="small" type="primary">{{ getSubjectLabel(row.subject, row.licenseType) }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column label="考试日期" width="110" align="center">
@@ -286,6 +286,14 @@ async function handleScoreSubmit() {
   } finally {
     scoreLoading.value = false
   }
+}
+
+const SPECIAL_TYPES = ['N1', 'N2', 'N3', 'M']
+function getSubjectLabel(subject, licenseType) {
+  if (SPECIAL_TYPES.includes(licenseType)) {
+    return subject === 1 ? '理论' : '实操'
+  }
+  return '科目' + subject
 }
 
 function getStatusTagType(status) {

@@ -43,9 +43,9 @@
 
       <el-table :data="sessionList" v-loading="sessionLoading" border stripe>
         <el-table-column type="index" label="序号" width="55" align="center" />
-        <el-table-column label="科目" width="75" align="center">
+        <el-table-column label="科目" width="85" align="center">
           <template #default="{ row }">
-            <el-tag size="small" type="primary">科目{{ row.subject }}</el-tag>
+            <el-tag size="small" type="primary">{{ getSubjectLabel(row.subject, row.licenseType) }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column label="适用车型" width="90" align="center">
@@ -123,9 +123,9 @@
 
       <el-table :data="regList" v-loading="regLoading" border stripe>
         <el-table-column type="index" label="序号" width="55" align="center" />
-        <el-table-column label="科目" width="75" align="center">
+        <el-table-column label="科目" width="85" align="center">
           <template #default="{ row }">
-            <el-tag size="small" type="primary">科目{{ row.subject }}</el-tag>
+            <el-tag size="small" type="primary">{{ getSubjectLabel(row.subject, row.licenseType) }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column label="适用车型" width="90" align="center">
@@ -291,6 +291,14 @@ async function handleRegister(session) {
   } finally {
     registeringId.value = null
   }
+}
+
+const SPECIAL_TYPES = ['N1', 'N2', 'N3', 'M']
+function getSubjectLabel(subject, licenseType) {
+  if (SPECIAL_TYPES.includes(licenseType)) {
+    return subject === 1 ? '理论' : '实操'
+  }
+  return '科目' + subject
 }
 
 function statusTagType(status) {
