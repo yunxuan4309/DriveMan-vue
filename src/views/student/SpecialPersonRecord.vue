@@ -107,6 +107,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
+import { useFilePreview } from '@/composables/useFilePreview'
 import { uploadFile } from '@/api/file'
 import { submitSpecialRecord, getMySpecialRecords, getMyBanStatus } from '@/api/specialPersonRecord'
 
@@ -174,9 +175,8 @@ function clearDocFile() {
 }
 
 function previewFile(fileId) {
-  if (!fileId) return
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:9500'
-  window.open(baseUrl + '/files/' + fileId + '/download?preview=true', '_blank')
+  const { previewFile: doPreview } = useFilePreview()
+  doPreview(fileId)
 }
 
 async function handleSubmit() {

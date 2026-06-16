@@ -301,6 +301,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Search, View, Edit, Delete, Check } from '@element-plus/icons-vue'
 import { getStudentList, createStudent, updateStudent, deleteStudent, auditRegistration } from '@/api/student'
+import { useFilePreview } from '@/composables/useFilePreview'
 import { uploadFile, getUserFiles } from '@/api/file'
 
 // 搜索表单
@@ -516,8 +517,8 @@ async function handleExistingLicenseUpload(file) {
 
 // 预览证明文件
 function previewFile(fileId) {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:9500'
-  window.open(baseUrl + '/files/' + fileId + '/download?preview=true', '_blank')
+  const { previewFile: doPreview } = useFilePreview()
+  doPreview(fileId)
 }
 
 // 打开学员文件选择器

@@ -232,6 +232,7 @@
 import { ref, onMounted } from 'vue'
 import { UserFilled } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
+import { useFilePreview } from '@/composables/useFilePreview'
 import { getProfile } from '@/api/profile'
 
 const userStore = useUserStore()
@@ -269,8 +270,8 @@ function fmtAmount(n) {
 }
 
 function previewFile(fileId) {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:9500'
-  window.open(baseUrl + '/files/' + fileId + '/download?preview=true', '_blank')
+  const { previewFile: doPreview } = useFilePreview()
+  doPreview(fileId)
 }
 
 function statusTag(s) {

@@ -138,6 +138,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Refresh } from '@element-plus/icons-vue'
+import { useFilePreview } from '@/composables/useFilePreview'
 import { getSpecialRecordPage, auditSpecialRecord } from '@/api/specialPersonRecord'
 
 const recordTypeMap = {
@@ -222,9 +223,8 @@ async function handleAuditSubmit() {
 }
 
 function previewFile(fileId) {
-  if (!fileId) return
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:9500'
-  window.open(baseUrl + '/files/' + fileId + '/download?preview=true', '_blank')
+  const { previewFile: doPreview } = useFilePreview()
+  doPreview(fileId)
 }
 
 function formatDateTime(dateTime) {
