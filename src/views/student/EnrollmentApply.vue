@@ -24,11 +24,40 @@
     >
       <p style="margin: 4px 0">
         报考车型：<el-tag size="small" type="warning">{{ pendingAudit.licenseType }}</el-tag>
-        &nbsp; 说明：该车型需要管理员审核残疾信息
+      </p>
+      <p v-if="disabilityStatus === null" style="margin: 4px 0; color: #e6a23c; font-weight: 600">
+        您还未提交残疾信息，请先上传残疾人证扫描件并提交审核
+      </p>
+      <p v-else-if="disabilityStatus === 0" style="margin: 4px 0; color: #909399">
+        残疾信息已提交，请等待管理员审核残疾信息
+      </p>
+      <p v-else-if="disabilityStatus === 2" style="margin: 4px 0; color: #f56c6c">
+        残疾信息审核未通过，请重新提交
+      </p>
+      <p v-else-if="disabilityStatus === 1" style="margin: 4px 0; color: #67c23a">
+        残疾信息已审核通过，等待管理员审核报名
       </p>
       <p style="margin: 4px 0; color: #909399; font-size: 13px">
         审核通过后，您将收到待支付账单，届时请完成缴费
       </p>
+      <el-button
+        v-if="disabilityStatus !== 1"
+        type="primary"
+        size="small"
+        style="margin-top: 8px"
+        @click="$router.push('/student/disability-info')"
+      >
+        {{ disabilityStatus === null ? '去提交残疾信息' : '查看/修改残疾信息' }}
+      </el-button>
+      <el-button
+        v-else
+        type="success"
+        size="small"
+        style="margin-top: 8px"
+        @click="$router.push('/student/disability-info')"
+      >
+        查看残疾信息
+      </el-button>
     </el-alert>
 
     <!-- 待支付提示 -->
@@ -104,11 +133,16 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import { getPackages, applyEnrollment, payEnrollment } from '@/api/enrollment'
+import { getCurrentUser } from '@/api/user'
+import { getMyPaymentRecords } from '@/api/payment'
+import { getMyDisabilityInfo } from '@/api/disabilityInfo'
 
 const userStore = useUserStore()
+const router = useRouter()
 
 const loading = ref(false)
 const applyLoading = ref(false)
@@ -118,6 +152,16 @@ const pendingAudit = ref(null)
 const paymentInfo = ref(null)
 const selectedPackage = ref(null)
 const packageGroups = ref([])
+const disabilityStatus = ref(null) // null=未提交, 0=待审核, 1=已通过, 2=已拒绝
+
+async function checkDisabilityStatus() {
+  try {
+    const info = await getMyDisabilityInfo()
+    disabilityStatus.value = info.auditStatus
+  } catch {
+    disabilityStatus.value = null
+  }
+}
 
 async function fetchPackages() {
   loading.value = true
@@ -159,6 +203,7 @@ async function handleApply() {
     if (res.needAudit) {
       pendingAudit.value = { licenseType: res.licenseType, message: res.message }
       localStorage.setItem('pendingAuditLicense', res.licenseType)
+      checkDisabilityStatus()
       ElMessage.success(res.message || '报名已提交，等待管理员审核')
       return
     }
@@ -201,7 +246,9 @@ async function handlePay() {
 
     isPaid.value = true
     paymentInfo.value = null
-    ElMessage.success('支付成功，您已成为正式学员！请从首页进入各项功能。')
+    ElMessage.success('支付成功，您已成为正式学员！正在跳转...')
+    // 延迟跳转，让用户看到成功提示，同时侧边栏已自动刷新为学员菜单
+    setTimeout(() => router.push('/'), 1500)
   } catch (error) {
     if (error !== 'cancel') console.error('支付失败:', error)
   } finally {
@@ -209,18 +256,56 @@ async function handlePay() {
   }
 }
 
-onMounted(() => {
-  if (userStore.role !== 0) {
-    isPaid.value = true
-    return
+onMounted(async () => {
+  try {
+    // 从后端获取真实的用户状态（JWT 中的角色可能已过时）
+    const user = await getCurrentUser()
+
+    if (user.role >= 1) {
+      // 检查是否有未支付的报名账单（C5 审核通过后会有 unpaid 账单）
+      try {
+        const records = await getMyPaymentRecords()
+        const unpaid = Array.isArray(records)
+          ? records.find(r => r.bizType === 'enrollment_fee' && r.status === 0)
+          : null
+        if (unpaid) {
+          localStorage.removeItem('pendingAuditLicense')
+          paymentInfo.value = {
+            paymentId: unpaid.id,
+            amount: unpaid.amount,
+            licenseType: user.licenseType || unpaid.licenseType,
+            description: unpaid.description,
+          }
+          return
+        }
+      } catch { /* 查询失败则默认已支付 */ }
+
+      isPaid.value = true
+      return
+    }
+
+    // role === 0
+    localStorage.removeItem('pendingAuditLicense')
+    if (user.licenseType && ['C5'].includes(user.licenseType)) {
+      pendingAudit.value = { licenseType: user.licenseType, message: '您的报名正在审核中' }
+      checkDisabilityStatus()
+      return
+    }
+
+    fetchPackages()
+  } catch {
+    // 后端查询失败时降级到本地缓存逻辑
+    if (userStore.role !== 0) {
+      isPaid.value = true
+      return
+    }
+    const pendingLicense = localStorage.getItem('pendingAuditLicense')
+    if (pendingLicense) {
+      pendingAudit.value = { licenseType: pendingLicense, message: '您的报名正在审核中' }
+      return
+    }
+    fetchPackages()
   }
-  // 恢复之前提交的 C5 待审核状态
-  const pendingLicense = localStorage.getItem('pendingAuditLicense')
-  if (pendingLicense) {
-    pendingAudit.value = { licenseType: pendingLicense, message: '您的报名正在审核中' }
-    return
-  }
-  fetchPackages()
 })
 </script>
 

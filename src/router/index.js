@@ -114,7 +114,7 @@ const routes = [
         path: 'disability-info',
         name: 'StudentDisabilityInfo',
         component: () => import('@/views/student/DisabilityInfo.vue'),
-        meta: { title: '残疾信息', roles: [1] },
+        meta: { title: '残疾信息', roles: [0, 1] },
       },
       {
         path: 'special-record',

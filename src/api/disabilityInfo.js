@@ -23,6 +23,11 @@ export function getDisabilityInfoPage(params) {
   return request.get('/disability-info/page', { params })
 }
 
+// 管理员根据用户ID查询残疾信息
+export function getDisabilityInfoByUserId(userId) {
+  return request.get(`/disability-info/user/${userId}`)
+}
+
 // 管理员审核
 export function auditDisabilityInfo(id, auditStatus, auditRemark) {
   const params = new URLSearchParams()

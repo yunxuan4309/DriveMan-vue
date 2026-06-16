@@ -84,6 +84,7 @@ const prospect = [
     icon: 'Edit',
     children: [
       { title: '驾考报名', icon: 'Edit', route: '/student/enrollment' },
+      { title: '残疾信息', icon: 'WarningFilled', route: '/student/disability-info' },
     ],
   },
 ]
