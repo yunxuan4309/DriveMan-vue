@@ -310,6 +310,12 @@ const routes = [
         meta: { title: '系统配置', roles: [3] },
       },
       {
+        path: 'notices',
+        name: 'NoticeManage',
+        component: () => import('@/views/admin/NoticeManage.vue'),
+        meta: { title: '公告管理', roles: [3] },
+      },
+      {
         path: 'license-upgrade-manage',
         name: 'AdminLicenseUpgrade',
         component: () => import('@/views/admin/LicenseUpgradeManage.vue'),
