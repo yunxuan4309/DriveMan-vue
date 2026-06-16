@@ -54,6 +54,9 @@ export const useUserStore = defineStore('user', () => {
     localStorage.setItem('username', data.username)
     localStorage.setItem('realName', data.realName)
 
+    // 登录成功后清除已确认的公告记录，确保每次登录重新显示公告
+    localStorage.removeItem(`notice_confirmed_${data.userId}`)
+
     return data
   }
 
@@ -73,6 +76,9 @@ export const useUserStore = defineStore('user', () => {
     localStorage.removeItem('examMode')
     localStorage.removeItem('username')
     localStorage.removeItem('realName')
+
+    // 退出时清除该用户的公告确认记录
+    localStorage.removeItem(`notice_confirmed_${userId.value}`)
   }
 
   // ── 从缓存恢复会话 ─────────────────────────────────────

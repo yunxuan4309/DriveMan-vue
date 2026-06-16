@@ -70,8 +70,25 @@ async function fetchNotices() {
   try {
     const res = await getActiveNotices()
     notices.value = res || []
+    cleanupConfirmedIds()
   } catch {
     notices.value = []
+  }
+}
+
+// 清理 localStorage 中已不存在于当前公告列表的确认记录
+function cleanupConfirmedIds() {
+  if (confirmedIds.value.size === 0 || notices.value.length === 0) return
+  const validIds = new Set(notices.value.map(n => n.id))
+  let changed = false
+  for (const id of confirmedIds.value) {
+    if (!validIds.has(id)) {
+      confirmedIds.value.delete(id)
+      changed = true
+    }
+  }
+  if (changed) {
+    saveConfirmedIds()
   }
 }
 

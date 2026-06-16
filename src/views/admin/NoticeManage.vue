@@ -21,17 +21,24 @@
 
       <el-table :data="noticeList" v-loading="loading" border stripe>
         <el-table-column type="index" label="序号" width="60" align="center" />
-        <el-table-column prop="title" label="公告标题" min-width="200" show-overflow-tooltip />
-        <el-table-column label="状态" width="90" align="center">
+        <el-table-column prop="title" label="公告标题" min-width="160" show-overflow-tooltip />
+        <el-table-column prop="content" label="公告内容" min-width="240" show-overflow-tooltip />
+        <el-table-column label="状态" width="100" align="center">
           <template #default="{ row }">
-            <el-tag :type="row.status === 1 ? 'success' : 'info'" size="small">
-              {{ row.status === 1 ? '已发布' : '草稿' }}
-            </el-tag>
+            <el-tag v-if="isExpired(row)" type="info" size="small">已过期</el-tag>
+            <el-tag v-else-if="row.publishTime" type="success" size="small">生效中</el-tag>
+            <el-tag v-else type="warning" size="small">未发布</el-tag>
           </template>
         </el-table-column>
         <el-table-column label="发布时间" width="160" align="center">
           <template #default="{ row }">
-            {{ formatDateTime(row.publishTime || row.createTime) }}
+            {{ formatDateTime(row.publishTime) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="过期时间" width="160" align="center">
+          <template #default="{ row }">
+            <span v-if="row.expireTime">{{ formatDateTime(row.expireTime) }}</span>
+            <el-tag v-else size="small" type="info">永不过期</el-tag>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="160" fixed="right" align="center">
@@ -66,6 +73,15 @@
         <el-form-item label="内容" prop="content">
           <el-input v-model="form.content" type="textarea" rows="6" placeholder="请输入公告内容" maxlength="2000" show-word-limit />
         </el-form-item>
+        <el-form-item label="过期时间">
+          <el-date-picker
+            v-model="form.expireTime"
+            type="datetime"
+            placeholder="不设置则永不过期"
+            value-format="YYYY-MM-DD HH:mm:ss"
+            style="width: 100%"
+          />
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -91,8 +107,13 @@ const dialogVisible = ref(false)
 const isEdit = ref(false)
 const formRef = ref(null)
 const saving = ref(false)
-const form = reactive({ title: '', content: '' })
+const form = reactive({ title: '', content: '', expireTime: '' })
 const editId = ref(null)
+
+function isExpired(row) {
+  if (!row.expireTime) return false
+  return new Date(row.expireTime) < new Date()
+}
 
 const formRules = {
   title: [{ required: true, message: '请输入公告标题', trigger: 'blur' }],
@@ -131,6 +152,7 @@ function handleAdd() {
   editId.value = null
   form.title = ''
   form.content = ''
+  form.expireTime = ''
   dialogVisible.value = true
 }
 
@@ -139,6 +161,7 @@ function handleEdit(row) {
   editId.value = row.id
   form.title = row.title
   form.content = row.content
+  form.expireTime = row.expireTime || ''
   dialogVisible.value = true
 }
 
@@ -158,7 +181,11 @@ async function handleSave() {
   if (!valid) return
   saving.value = true
   try {
-    const data = { title: form.title, content: form.content }
+    const data = {
+      title: form.title,
+      content: form.content,
+      expireTime: form.expireTime || null,
+    }
     if (isEdit.value) {
       await updateNotice(editId.value, data)
       ElMessage.success('公告已更新')
