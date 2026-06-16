@@ -142,3 +142,17 @@ export function applyStudentTransfer(studentIds, targetCoachId, reason) {
 export function getCoachTransferRecords() {
   return request.get('/coach-portal/student-transfers')
 }
+
+// ═══════════════════════════════════════════════════════
+// 教练注册审核 API
+// ═══════════════════════════════════════════════════════
+
+// 分页查询教练注册记录（支持 status / keyword / licenseType 筛选）
+export function getCoachRegistrations(params) {
+  return request.get('/coaches/registrations', { params })
+}
+
+// 审核教练注册
+export function auditCoachRegistration(userId, pass, reason) {
+  return request.put(`/coaches/${userId}/audit?pass=${pass}${reason !== undefined && reason !== null && reason !== '' ? '&reason=' + encodeURIComponent(reason) : ''}`)
+}

@@ -351,6 +351,12 @@ const routes = [
         component: () => import('@/views/admin/SpecialPersonRecordManage.vue'),
         meta: { title: '特殊人群记录管理', roles: [3] },
       },
+      {
+        path: 'coach-registration-review',
+        name: 'CoachRegistrationReview',
+        component: () => import('@/views/admin/CoachRegistrationReview.vue'),
+        meta: { title: '教练注册审核', roles: [3] },
+      },
     ],
   },
 ]

@@ -22,6 +22,7 @@ const admin = [
     icon: 'Avatar',
     children: [
       { title: '教练管理', icon: 'User', route: '/admin/coaches' },
+      { title: '教练注册审核', icon: 'UserFilled', route: '/admin/coach-registration-review' },
       { title: '教练申请审核', icon: 'Files', route: '/admin/coach-application-review' },
       { title: '准教车型审核', icon: 'Check', route: '/admin/vehicle-application-review' },
       { title: '排班审核', icon: 'Calendar', route: '/admin/schedule-review' },
