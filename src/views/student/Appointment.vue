@@ -14,6 +14,9 @@
         <el-table-column label="车型" width="70" align="center">
           <template #default="{ row }"><el-tag size="small">{{ row.licenseType }}</el-tag></template>
         </el-table-column>
+        <el-table-column label="科目" width="80" align="center">
+          <template #default="{ row }">{{ row.subject ? '科目' + row.subject : '-' }}</template>
+        </el-table-column>
         <el-table-column label="开始时间" width="150" align="center">
           <template #default="{ row }">{{ formatDateTime(row.startTime) }}</template>
         </el-table-column>
@@ -63,6 +66,9 @@
       <el-table :data="myAppointmentList" v-loading="myLoading" border stripe>
         <el-table-column type="index" label="序号" width="60" align="center" />
         <el-table-column prop="coachName" label="教练" width="100" align="center" />
+        <el-table-column label="科目" width="80" align="center">
+          <template #default="{ row }">{{ row.subject ? '科目' + row.subject : '-' }}</template>
+        </el-table-column>
         <el-table-column label="时间" min-width="240">
           <template #default="{ row }">
             {{ formatDateTime(row.startTime) }} ~ {{ formatTime(row.endTime) }}
